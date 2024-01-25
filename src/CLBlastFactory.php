@@ -5,6 +5,7 @@ use FFI;
 use FFI\Env\Runtime as FFIEnvRuntime;
 use FFI\Env\Status as FFIEnvStatus;
 use FFI\Location\Locator as FFIEnvLocator;
+use RuntimeException;
 
 class CLBlastFactory
 {
