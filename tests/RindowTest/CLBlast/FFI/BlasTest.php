@@ -23,7 +23,9 @@ class Test extends TestCase
     protected bool $skipDisplayInfo = true;
 
     //protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_DEFAULT;
-    protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_GPU;
+    //protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_GPU;
+    static protected int $default_device_type = OpenCL::CL_DEVICE_TYPE_GPU;
+
     protected ?object $opencl=null;
     protected ?object $clblast=null;
     protected ?object $openblas=null;
@@ -52,6 +54,20 @@ class Test extends TestCase
         return $this->openblas->Blas();
     }
 
+    public function newContextFromType($ocl)
+    {
+        try {
+            $context = $ocl->Context(self::$default_device_type);
+        } catch(RuntimeException $e) {
+            if(strpos('clCreateContextFromType',$e->getMessage())===null) {
+                throw $e;
+            }
+            self::$default_device_type = OpenCL::CL_DEVICE_TYPE_DEFAULT;
+            $context = $ocl->Context(self::$default_device_type);
+        }
+        return $context;
+    }
+
     public function newHostBuffer($size,$dtype)
     {
         return new HostBuffer($size,$dtype);
@@ -75,7 +91,7 @@ class Test extends TestCase
     protected function getScalTestEnv(int $NMITEM) : array
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBuffer = $this->newHostBuffer($NMITEM,NDArray::float32);
         for($i=0;$i<$NMITEM;$i++) {
@@ -185,7 +201,7 @@ class Test extends TestCase
     protected function getAxpyTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferY = $this->newHostBuffer($NMITEM,NDArray::float32);
@@ -287,7 +303,7 @@ class Test extends TestCase
     protected function getDotTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferY = $this->newHostBuffer($NMITEM,NDArray::float32);
@@ -425,7 +441,7 @@ class Test extends TestCase
     protected function getAsumTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::float32);
@@ -535,7 +551,7 @@ class Test extends TestCase
     protected function getIamaxTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::int32);
@@ -649,7 +665,7 @@ class Test extends TestCase
     protected function getIaminTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::int32);
@@ -763,7 +779,7 @@ class Test extends TestCase
     protected function getCopyTestEnv($NMITEM,$dtype)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,$dtype);
         $hostBufferY = $this->newHostBuffer($NMITEM,$dtype);
@@ -911,7 +927,7 @@ class Test extends TestCase
     protected function getNrm2TestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::float32);
@@ -1011,7 +1027,7 @@ class Test extends TestCase
     protected function getSwapTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferY = $this->newHostBuffer($NMITEM,NDArray::float32);
@@ -1120,7 +1136,7 @@ class Test extends TestCase
     protected function getGemvTestEnv($m,$n)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferA = $this->newHostBuffer($m*$n,NDArray::float32);
         $hostBufferX = $this->newHostBuffer($n,NDArray::float32);
@@ -1298,7 +1314,7 @@ class Test extends TestCase
     protected function getGemmTestEnv($m,$n,$k)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferA = $this->newHostBuffer($m*$k,NDArray::float32);
         $hostBufferB = $this->newHostBuffer($k*$n,NDArray::float32);

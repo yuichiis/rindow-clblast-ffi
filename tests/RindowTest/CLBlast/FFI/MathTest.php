@@ -25,7 +25,9 @@ class Test extends TestCase
     protected bool $skipDisplayInfo = true;
 
     //protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_DEFAULT;
-    protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_GPU;
+    //protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_GPU;
+    static protected int $default_device_type = OpenCL::CL_DEVICE_TYPE_GPU;
+
     protected ?object $opencl=null;
     protected ?object $clblast=null;
     protected ?object $openblas=null;
@@ -63,6 +65,20 @@ class Test extends TestCase
         return $this->matlib->Math();
     }
 
+    public function newContextFromType($ocl)
+    {
+        try {
+            $context = $ocl->Context(self::$default_device_type);
+        } catch(RuntimeException $e) {
+            if(strpos('clCreateContextFromType',$e->getMessage())===null) {
+                throw $e;
+            }
+            self::$default_device_type = OpenCL::CL_DEVICE_TYPE_DEFAULT;
+            $context = $ocl->Context(self::$default_device_type);
+        }
+        return $context;
+    }
+
     public function newHostBuffer($size,$dtype)
     {
         return new HostBuffer($size,$dtype);
@@ -86,7 +102,7 @@ class Test extends TestCase
     protected function getSumTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::float32);
@@ -196,7 +212,7 @@ class Test extends TestCase
     protected function getimaxTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::int32);
@@ -310,7 +326,7 @@ class Test extends TestCase
     protected function getiminTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferR = $this->newHostBuffer(1,NDArray::int32);
@@ -424,7 +440,7 @@ class Test extends TestCase
     protected function gethadamardTestEnv($NMITEM)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM,NDArray::float32);
         $hostBufferY = $this->newHostBuffer($NMITEM,NDArray::float32);
@@ -555,7 +571,7 @@ class Test extends TestCase
     protected function getomatcopyTestEnv($m,$n)
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferA = $this->newHostBuffer($n*$m,NDArray::float32);
         $hostBufferB = $this->newHostBuffer($m*$n,NDArray::float32);
@@ -703,7 +719,7 @@ class Test extends TestCase
         $out_h = $height-$kernel_h+1;
         $out_w = $width-$kernel_w+1;
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $host_im_buffer  = $this->newHostBuffer($height*$width*$channels,NDArray::float32);
         #$host_col_buffer = $this->newHostBuffer(($height-$kernel_h+1)*($width-$kernel_w+1)*4*$channels,NDArray::float32);
@@ -1026,7 +1042,7 @@ class Test extends TestCase
         )
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $host_col_buffer = $this->newHostBuffer(($height-$kernel_h+1)*($width-$kernel_w+1)*4*$channels,NDArray::float32);
         $host_im_buffer  = $this->newHostBuffer($height*$width*$channels,NDArray::float32);
@@ -1146,7 +1162,7 @@ class Test extends TestCase
         $out_h = $height-$kernel_h+1;
         $out_w = $width-$kernel_w+1;
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $host_im_buffer  = $this->newHostBuffer($height*$width*$channels*$batch_count,NDArray::float32);
         $host_kernel_buffer = $this->newHostBuffer($kernel_w*$kernel_w*$channels*$num_kernels,NDArray::float32);
@@ -1286,7 +1302,7 @@ class Test extends TestCase
     )
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferX = $this->newHostBuffer($NMITEM*$batch_count,NDArray::float32);
         $hostBufferY = $this->newHostBuffer($NMITEM*$batch_count,NDArray::float32);
@@ -1361,7 +1377,7 @@ class Test extends TestCase
     )
     {
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostAlpha   = $this->newHostBuffer($batch_count,NDArray::float32);
         $hostBeta    = $this->newHostBuffer($batch_count,NDArray::float32);
@@ -1490,7 +1506,7 @@ class Test extends TestCase
         $strideB = $k*$n;
         $strideC = $m*$n;
         $ocl = $this->getOpenCL();
-        $context = $ocl->Context($this->defaultDeviceType);
+        $context = $this->newContextFromType($ocl);
         $queue = $ocl->CommandQueue($context);
         $hostBufferA = $this->newHostBuffer($batch_count*$m*$k,NDArray::float32);
         $hostBufferB = $this->newHostBuffer($batch_count*$k*$n,NDArray::float32);
