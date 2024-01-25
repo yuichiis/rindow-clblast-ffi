@@ -43,11 +43,17 @@ class CLBlastFactory
 
     public function Blas(object $queue=null,object $service=null) : object
     {
+        if(self::$ffi==null) {
+            throw new RuntimeException('clblast library not loaded.');
+        }
         return new Blas(self::$ffi);
     }
 
     public function Math(object $queue=null,object $service=null) : object
     {
+        if(self::$ffi==null) {
+            throw new RuntimeException('clblast library not loaded.');
+        }
         return new Math(self::$ffi);
     }
 }
