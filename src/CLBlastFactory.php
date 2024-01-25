@@ -2,15 +2,17 @@
 namespace Rindow\CLBlast\FFI;
 
 use FFI;
-use FFI\Env\Runtime as FFIEnvRuntime;
-use FFI\Env\Status as FFIEnvStatus;
-use FFI\Location\Locator as FFIEnvLocator;
+//use FFI\Env\Runtime as FFIEnvRuntime;
+//use FFI\Env\Status as FFIEnvStatus;
+//use FFI\Location\Locator as FFIEnvLocator;
+use FFI\Exception as FFIException;
 use RuntimeException;
 
 class CLBlastFactory
 {
     private static ?FFI $ffi = null;
-    protected array $libs = ['clblast.dll','libclblast.so'];
+    protected array $libs_win = ['clblast.dll'];
+    protected array $libs_linux = ['libclblast.so'];
 
     public function __construct(
         string $headerFile=null,
@@ -20,26 +22,47 @@ class CLBlastFactory
         if(self::$ffi!==null) {
             return;
         }
-        //$this->assertExistLibrary('');
-        $headerFile = $headerFile ?? __DIR__ . "/clblast_win.h";
-        $libFiles = $libFiles ?? $this->libs;
+        $headerFile = $headerFile ?? __DIR__ . "/clblast.h";
         //$ffi = FFI::load($headerFile);
+
+        if($libFiles==null) {
+            if(PHP_OS=='Linux') {
+                $libFiles = $this->libs_linux;
+            } elseif(PHP_OS=='WINNT') {
+                $libFiles = $this->libs_win;
+            } else {
+                throw new RuntimeException('Unknown operating system: "'.PHP_OS.'"');
+            }
+        }
         $code = file_get_contents($headerFile);
-        $pathname = FFIEnvLocator::resolve(...$libFiles);
-        if($pathname) {
-            $ffi = FFI::cdef($code,$pathname);
+        // ***************************************************************
+        // FFI Locator is incompletely implemented. It is often not found.
+        // ***************************************************************
+        //$pathname = FFIEnvLocator::resolve(...$libFiles);
+        //if($pathname) {
+        //    $ffi = FFI::cdef($code,$pathname);
+        //    self::$ffi = $ffi;
+        //}
+        foreach ($libFiles as $filename) {
+            try {
+                $ffi = FFI::cdef($code,$filename);
+            } catch(FFIException $e) {
+                continue;
+            }
             self::$ffi = $ffi;
+            break;
         }
     }
 
     public function isAvailable() : bool
     {
-        $isAvailable = FFIEnvRuntime::isAvailable();
-        if(!$isAvailable) {
-            return false;
-        }
-        $pathname = FFIEnvLocator::resolve(...$this->libs);
-        return $pathname!==null;
+        return self::$ffi!==null;
+        //$isAvailable = FFIEnvRuntime::isAvailable();
+        //if(!$isAvailable) {
+        //    return false;
+        //}
+        //$pathname = FFIEnvLocator::resolve(...$this->libs);
+        //return $pathname!==null;
     }
 
     public function Blas(object $queue=null,object $service=null) : object
