@@ -20,7 +20,7 @@ use TypeError;
 use ArrayObject;
 use ArrayAccess;
 
-class Test extends TestCase
+class MathTest extends TestCase
 {
     protected bool $skipDisplayInfo = true;
 
