@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-CLBLASTVERSION=1.5.2
+CLBLASTVERSION=1.6.1
 
 . /etc/os-release
 
