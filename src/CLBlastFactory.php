@@ -2,9 +2,6 @@
 namespace Rindow\CLBlast\FFI;
 
 use FFI;
-//use FFI\Env\Runtime as FFIEnvRuntime;
-//use FFI\Env\Status as FFIEnvStatus;
-//use FFI\Location\Locator as FFIEnvLocator;
 use FFI\Exception as FFIException;
 use RuntimeException;
 
@@ -23,7 +20,6 @@ class CLBlastFactory
             return;
         }
         $headerFile = $headerFile ?? __DIR__ . "/clblast.h";
-        //$ffi = FFI::load($headerFile);
 
         if($libFiles==null) {
             if(PHP_OS=='Linux') {

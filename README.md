@@ -14,7 +14,7 @@ Requirements
 ============
 
 - PHP 8.1 or PHP8.2 or PHP8.3
-- CLBlast 1.6.0 or later
+- CLBlast 1.5.1 or later
 
 How to setup OpenCL & CLBlast
 =============================
