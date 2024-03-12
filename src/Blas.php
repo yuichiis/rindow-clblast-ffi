@@ -2,7 +2,9 @@
 namespace Rindow\CLBlast\FFI;
 
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\Math\Matrix\BLAS as BLASIF;
 use InvalidArgumentException;
+use RuntimeException;
 use FFI;
 use Rindow\OpenCL\FFI\Buffer as DeviceBuffer;
 use Rindow\OpenCL\FFI\CommandQueue;
@@ -11,7 +13,10 @@ use Rindow\OpenCL\FFI\EventList;
 
 class Blas
 {
+    use Utils;
+
     const CLBlastSuccess = 0;
+    const CLBlastNotImplemented = -1024;
     protected FFI $ffi;
 
     public function __construct(FFI $ffi)
@@ -24,7 +29,7 @@ class Blas
      */
     public function scal(
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $X, int $offsetX, int $incX,
         CommandQueue $queue,// Rindow\OpenCL\CommandQueue
         EventList $event=null,   // Rindow\OpenCL\EventList
@@ -53,6 +58,22 @@ class Blas
                     $queue_p,$event_p);
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $status = $ffi->CLBlastCscal(
+                    $n,$alpha,
+                    $buffer_p,$offsetX,$incX,
+                    $queue_p,$event_p);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $status = $ffi->CLBlastZscal(
+                    $n,$alpha,
+                    $buffer_p,$offsetX,$incX,
+                    $queue_p,$event_p);
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -71,7 +92,7 @@ class Blas
      */
     public function axpy(
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $X, int $offsetX, int $incX,
         DeviceBuffer $Y, int $offsetY, int $incY,
         CommandQueue $queue,// Rindow\OpenCL\CommandQueue
@@ -109,6 +130,24 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $status = $ffi->CLBlastCaxpy($n,$alpha,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $status = $ffi->CLBlastZaxpy($n,$alpha,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -135,9 +174,9 @@ class Blas
         if($X->dtype()!=$Y->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for X and Y");
         }
-        //if($X->dtype()!=$R->dtype()) {
-        //    throw new InvalidArgumentException("Unmatch data type for X and R");
-        //}
+        if($R->dtype()!=0 && $X->dtype()!=$R->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and R");
+        }
         $bufferR_p = $ffi->cast("cl_mem",$R->_getId());
         $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
         $bufferY_p = $ffi->cast("cl_mem",$Y->_getId());
@@ -179,6 +218,122 @@ class Blas
         }
     }
 
+    public function dotc(
+        int $n,
+        DeviceBuffer $R, int $offsetR,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        CommandQueue $queue,// Rindow\OpenCL\CommandQueue
+        EventList $event=null,   // Rindow\OpenCL\EventList
+        ) : void
+    {
+        $ffi = $this->ffi;
+        // Check Buffer X and Y
+        if($X->dtype()!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and Y");
+        }
+        if($R->dtype()!=0 && $X->dtype()!=$R->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and R");
+        }
+        $bufferR_p = $ffi->cast("cl_mem",$R->_getId());
+        $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
+        $bufferY_p = $ffi->cast("cl_mem",$Y->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($X->dtype()) {
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastCdotc($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastZdotc($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?dot error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
+    public function dotu(
+        int $n,
+        DeviceBuffer $R, int $offsetR,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        CommandQueue $queue,// Rindow\OpenCL\CommandQueue
+        EventList $event=null,   // Rindow\OpenCL\EventList
+        ) : void
+    {
+        $ffi = $this->ffi;
+        // Check Buffer X and Y
+        if($X->dtype()!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and Y");
+        }
+        if($R->dtype()!=0 && $X->dtype()!=$R->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and R");
+        }
+        $bufferR_p = $ffi->cast("cl_mem",$R->_getId());
+        $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
+        $bufferY_p = $ffi->cast("cl_mem",$Y->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($X->dtype()) {
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastCdotu($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastZdotu($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?dot error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
     public function asum(
         int $n,
         DeviceBuffer $R, int $offsetR,
@@ -189,11 +344,9 @@ class Blas
     {
         $ffi = $this->ffi;
         // Check Buffer X and R
-        //if($X->dtype()!=$R->dtype()) {
-        //    var_dump($X->dtype());
-        //    var_dump($R->dtype());
-        //    throw new InvalidArgumentException("Unmatch data type for X and R");
-        //}
+        if($R->dtype()!=0 && $X->dtype()!=$R->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and R");
+        }
         $bufferR_p = $ffi->cast("cl_mem",$R->_getId());
         $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
         $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
@@ -214,6 +367,22 @@ class Blas
             }
             case NDArray::float64:{
                 $status = $ffi->CLBlastDasum($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastScasum($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastDzasum($n,
                     $bufferR_p,$offsetR,
                     $bufferX_p,$offsetX,$incX,
                     $queue_p,$event_p
@@ -267,6 +436,22 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastiCamax($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastiZamax($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -308,6 +493,22 @@ class Blas
             }
             case NDArray::float64:{
                 $status = $ffi->CLBlastiDamin($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastiCamin($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastiZamin($n,
                     $bufferR_p,$offsetR,
                     $bufferX_p,$offsetX,$incX,
                     $queue_p,$event_p
@@ -365,6 +566,22 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastCcopy($n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastZcopy($n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 if($incX!=1||$incY!=1) {
                     throw new InvalidArgumentException("clEnqueueCopyBuffer not supports incX and incY.");
@@ -399,6 +616,10 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        // Check Buffer X and R
+        if($R->dtype()!=0 && $X->dtype()!=$R->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and R");
+        }
         $bufferR_p = $ffi->cast("cl_mem",$R->_getId());
         $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
         $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
@@ -419,6 +640,22 @@ class Blas
             }
             case NDArray::float64:{
                 $status = $ffi->CLBlastDnrm2($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastScnrm2($n,
+                    $bufferR_p,$offsetR,
+                    $bufferX_p,$offsetX,$incX,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastDznrm2($n,
                     $bufferR_p,$offsetR,
                     $bufferX_p,$offsetX,$incX,
                     $queue_p,$event_p
@@ -476,6 +713,22 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $status = $ffi->CLBlastCswap($n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $ffi->CLBlastZswap($n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -488,15 +741,151 @@ class Blas
         }
     }
 
+    public function rotg(
+        DeviceBuffer $A, int $offsetA,
+        DeviceBuffer $B, int $offsetB,
+        DeviceBuffer $C, int $offsetC,
+        DeviceBuffer $S, int $offsetS,
+        CommandQueue $queue,// Rindow\OpenCL\CommandQueue
+        EventList $event=null,   // Rindow\OpenCL\EventList
+        ) : void
+    {
+        $ffi= $this->ffi;
+
+        //// Check Buffer A
+        //$this->assert_vector_buffer_spec("A", $A, 1, $offsetA, 1);
+        //// Check Buffer B
+        //$this->assert_vector_buffer_spec("B", $B, 1, $offsetB, 1);
+        //// Check Buffer C
+        //$this->assert_vector_buffer_spec("C", $C, 1, $offsetC, 1);
+        //// Check Buffer S
+        //$this->assert_vector_buffer_spec("S", $S, 1, $offsetS, 1);
+
+        // Check Buffer A and B and C and S
+        $dtype = $A->dtype();
+        if($dtype!=$B->dtype()||$dtype!=$C->dtype()||$dtype!=$S->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A,B,C and S");
+        }
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
+        $bufferC_p = $ffi->cast("cl_mem",$C->_getId());
+        $bufferS_p = $ffi->cast("cl_mem",$S->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $status = $ffi->CLBlastSrotg(
+                    $bufferA_p,$offsetA,
+                    $bufferB_p,$offsetB,
+                    $bufferC_p,$offsetC,
+                    $bufferS_p,$offsetS,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::float64:{
+                $status = $ffi->CLBlastDrotg(
+                    $bufferA_p,$offsetA,
+                    $bufferB_p,$offsetB,
+                    $bufferC_p,$offsetC,
+                    $bufferS_p,$offsetS,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            if($status==self::CLBlastNotImplemented) {
+                throw new RuntimeException("CLBlast?rotg error=$status: Not Implemented", $status);
+            }
+            throw new RuntimeException("CLBlast?rotg error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
+    public function rot(
+        int $n,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        float $cos,
+        float $sin,
+        CommandQueue $queue,// Rindow\OpenCL\CommandQueue
+        EventList $event=null,   // Rindow\OpenCL\EventList
+        ) : void
+    {
+        $ffi= $this->ffi;
+
+        // Check Buffer A and B and C and S
+        $dtype = $X->dtype();
+        if($dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for X and Y");
+        }
+        $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
+        $bufferY_p = $ffi->cast("cl_mem",$Y->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $status = $ffi->CLBlastSrot(
+                    $n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $cos,
+                    $sin,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::float64:{
+                $status = $ffi->CLBlastDrot(
+                    $n,
+                    $bufferX_p,$offsetX,$incX,
+                    $bufferY_p,$offsetY,$incY,
+                    $cos,
+                    $sin,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            if($status==self::CLBlastNotImplemented) {
+                throw new RuntimeException("CLBlast?rot error=$status: Not Implemented", $status);
+            }
+            throw new RuntimeException("CLBlast?rot error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
     public function gemv(
         int $order,
         int $trans,
         int $m,
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $X, int $offsetX, int $incX,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $Y, int $offsetY, int $incY,
         CommandQueue $queue,
         EventList $event=null
@@ -509,6 +898,10 @@ class Blas
         }
         if($X->dtype()!=$Y->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for X and Y");
+        }
+        // CLBlast does not support ConjNoTrans
+        if($trans==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
         }
         $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
         $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
@@ -549,6 +942,38 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $beta = $this->toComplex($beta,$X->dtype());
+                $status = $ffi->CLBlastCgemv(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$X->dtype());
+                $beta = $this->toComplex($beta,$X->dtype());
+                $status = $ffi->CLBlastCgemv(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -568,10 +993,10 @@ class Blas
         int $m,
         int $n,
         int $k,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $B, int $offsetB, int $ldB,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $C, int $offsetC, int $ldC,
         CommandQueue $queue,
         EventList $event=null
@@ -584,6 +1009,13 @@ class Blas
         }
         if($A->dtype()!=$C->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and C");
+        }
+        // CLBlast does not support ConjNoTrans
+        if($transA==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
+        }
+        if($transB==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
         }
         $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
         $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
@@ -626,6 +1058,40 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastCgemm(
+                    $order,
+                    $transA,
+                    $transB,
+                    $m,$n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastZgemm(
+                    $order,
+                    $transA,
+                    $transB,
+                    $m,$n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -644,10 +1110,10 @@ class Blas
         int $uplo,
         int $m,
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $B, int $offsetB, int $ldB,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $C, int $offsetC, int $ldC,
         CommandQueue $queue,
         EventList $event=null,
@@ -702,6 +1168,40 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastCsymm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastZsymm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -720,9 +1220,9 @@ class Blas
         int $trans,
         int $n,
         int $k,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $C, int $offsetC, int $ldC,
         CommandQueue $queue,
         EventList $event=null,
@@ -771,6 +1271,38 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastCsyrk(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastZsyrk(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -789,10 +1321,10 @@ class Blas
         int $trans,
         int $n,
         int $k,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $B, int $offsetB, int $ldB,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $C, int $offsetC, int $ldC,
         CommandQueue $queue,
         EventList $event=null,
@@ -847,6 +1379,40 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastCsyr2k(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastZsyr2k(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -867,7 +1433,7 @@ class Blas
         int $diag,
         int $m,
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $B, int $offsetB, int $ldB,
         CommandQueue $queue,
@@ -919,6 +1485,38 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastCtrmm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $trans,
+                    $diag,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastZtrmm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $trans,
+                    $diag,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -939,7 +1537,7 @@ class Blas
         int $diag,
         int $m,
         int $n,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA,
         DeviceBuffer $B, int $offsetB, int $ldB,
         CommandQueue $queue,
@@ -991,6 +1589,38 @@ class Blas
                 );
                 break;
             }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastCtrsm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $trans,
+                    $diag,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastZtrsm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $trans,
+                    $diag,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
             default: {
                 throw new InvalidArgumentException('Unsuppored data type');
             }
@@ -1002,4 +1632,98 @@ class Blas
             $event->_move($event_obj);
         }
     }
+
+    public function omatcopy(
+        int $order,
+        int $trans,
+        int $m,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $B, int $offsetB, int $ldB,
+        CommandQueue $queue,
+        EventList $event=null
+    ) : void
+    {
+        $ffi = $this->ffi;
+        // Check Buffer A and B
+        if($A->dtype()!=$B->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and B");
+        }
+        // CLBlast does not support ConjNoTrans
+        if($trans==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
+        }
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($A->dtype()) {
+            case NDArray::float32:{
+                $status = $ffi->CLBlastSomatcopy(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p, $offsetA, $ldA,
+                    $bufferB_p, $offsetB, $ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::float64:{
+                $status = $ffi->CLBlastDomatcopy(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p, $offsetA, $ldA,
+                    $bufferB_p, $offsetB, $ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastComatcopy(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p, $offsetA, $ldA,
+                    $bufferB_p, $offsetB, $ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $status = $ffi->CLBlastZomatcopy(
+                    $order,
+                    $trans,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p, $offsetA, $ldA,
+                    $bufferB_p, $offsetB, $ldB,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?omatcopy error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
 }

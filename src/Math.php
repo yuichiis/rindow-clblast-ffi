@@ -3,6 +3,7 @@ namespace Rindow\CLBlast\FFI;
 
 use Interop\Polite\Math\Matrix\LinearBuffer as HostBuffer;
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\Math\Matrix\BLAS as BLASIF;
 use InvalidArgumentException;
 use OutOfRangeException;
 use LogicException;
@@ -14,6 +15,8 @@ use Rindow\OpenCL\FFI\EventList;
 
 class Math
 {
+    use Utils;
+
     const CLBlastSuccess = 0;
     const CROSS_CORRELATION = 151;
     const CONVOLUTION = 152;
@@ -225,69 +228,6 @@ class Math
         }
         if($status!=self::CLBlastSuccess) {
             throw new RuntimeException("CLBlast?had error=$status", $status);
-        }
-        if($event) {
-            $event->_move($event_obj);
-        }
-    }
-
-    public function omatcopy(
-        int $order,
-        int $transA,
-        int $m,
-        int $n,
-        float $alpha,
-        DeviceBuffer $A, int $offsetA, int $ldA,
-        DeviceBuffer $B, int $offsetB, int $ldB,
-        CommandQueue $queue,
-        EventList $event=null
-    ) : void
-    {
-        $ffi = $this->ffi;
-        // Check Buffer A and B
-        if($A->dtype()!=$B->dtype()) {
-            throw new InvalidArgumentException("Unmatch data type for A and B");
-        }
-        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
-        $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
-        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
-        $event_p = null;
-        if($event) {
-            $event_obj = $event->_ffi()->new("cl_event[1]");
-            $event_p = $ffi->cast("cl_event[1]",$event_obj);
-        }
-
-        switch($A->dtype()) {
-            case NDArray::float32:{
-                $status = $ffi->CLBlastSomatcopy(
-                    $order,
-                    $transA,
-                    $m,$n,
-                    $alpha,
-                    $bufferA_p, $offsetA, $ldA,
-                    $bufferB_p, $offsetB, $ldB,
-                    $queue_p,$event_p
-                );
-                break;
-            }
-            case NDArray::float64:{
-                $status = $ffi->CLBlastDomatcopy(
-                    $order,
-                    $transA,
-                    $m,$n,
-                    $alpha,
-                    $bufferA_p, $offsetA, $ldA,
-                    $bufferB_p, $offsetB, $ldB,
-                    $queue_p,$event_p
-                );
-                break;
-            }
-            default: {
-                throw new InvalidArgumentException('Unsuppored data type');
-            }
-        }
-        if($status!=self::CLBlastSuccess) {
-            throw new RuntimeException("CLBlast?omatcopy error=$status", $status);
         }
         if($event) {
             $event->_move($event_obj);
@@ -732,10 +672,10 @@ class Math
         int $m,
         int $n,
         int $k,
-        float $alpha,
+        float|object $alpha,
         DeviceBuffer $A, int $offsetA, int $ldA, int $strideA,
         DeviceBuffer $B, int $offsetB, int $ldB, int $strideB,
-        float $beta,
+        float|object $beta,
         DeviceBuffer $C, int $offsetC, int $ldC, int $strideC,
         int $batch_count,
         CommandQueue $queue,
@@ -769,6 +709,13 @@ class Math
         if($A->dtype()!=$B->dtype()||$A->dtype()!=$C->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A,B and C");
         }
+        // CLBlast does not support ConjNoTrans
+        if($transA==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
+        }
+        if($transB==BLASIF::ConjNoTrans) {
+            throw new InvalidArgumentException("CLBlast does not support ConjNoTrans");
+        }
         $A_p = $ffi->cast("cl_mem",$A->_getId());
         $B_p = $ffi->cast("cl_mem",$B->_getId());
         $C_p = $ffi->cast("cl_mem",$C->_getId());
@@ -799,6 +746,42 @@ class Math
             }
             case NDArray::float64:{
                 $status = $ffi->CLBlastDgemmStridedBatched(
+                    $order,
+                    $transA,
+                    $transB,
+                    $m, $n, $k,
+                    $alpha,
+                    $A_p, $offsetA, $ldA,$strideA,
+                    $B_p, $offsetB, $ldB,$strideB,
+                    $beta,
+                    $C_p, $offsetC, $ldC,$strideC,
+                    $batch_count,
+                    $queue_p, $event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastCgemmStridedBatched(
+                    $order,
+                    $transA,
+                    $transB,
+                    $m, $n, $k,
+                    $alpha,
+                    $A_p, $offsetA, $ldA,$strideA,
+                    $B_p, $offsetB, $ldB,$strideB,
+                    $beta,
+                    $C_p, $offsetC, $ldC,$strideC,
+                    $batch_count,
+                    $queue_p, $event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype());
+                $beta = $this->toComplex($beta,$A->dtype());
+                $status = $ffi->CLBlastZgemmStridedBatched(
                     $order,
                     $transA,
                     $transB,
