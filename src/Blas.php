@@ -1689,12 +1689,12 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $cl_alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype());
                 $status = $ffi->CLBlastComatcopy(
                     $order,
                     $trans,
                     $m,$n,
-                    $cl_alpha,
+                    $alpha,
                     $bufferA_p, $offsetA, $ldA,
                     $bufferB_p, $offsetB, $ldB,
                     $queue_p,$event_p
