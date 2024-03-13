@@ -19,7 +19,7 @@ class CLBlastFactory
         if(self::$ffi!==null) {
             return;
         }
-        $headerFile = $headerFile ?? __DIR__ . "/clblast.h";
+        $headerFile = $headerFile ?? __DIR__ . "/clblast_c.h";
 
         if($libFiles==null) {
             if(PHP_OS=='Linux') {

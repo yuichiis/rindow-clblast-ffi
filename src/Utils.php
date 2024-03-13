@@ -11,14 +11,14 @@ trait Utils
         switch($dtype) {
             case NDArray::complex64: {
                 $to = $ffi->new('cl_float2');
-                $to->s0 = $from->real;
-                $to->s1 = $from->imag;
+                $to->s[0] = $from->real;
+                $to->s[1] = $from->imag;
                 break;
             }
             case NDArray::complex128: {
                 $to = $ffi->new('cl_double2');
-                $to->s0 = $from->real;
-                $to->s1 = $from->imag;
+                $to->s[0] = $from->real;
+                $to->s[1] = $from->imag;
                 break;
             }
             default: {

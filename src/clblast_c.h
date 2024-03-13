@@ -13,20 +13,15 @@ typedef uint64_t                    cl_ulong;
 typedef uint16_t                    cl_half;
 typedef float                       cl_float;
 typedef double                      cl_double;
-//typedef union {
-//    cl_float   s[2];
-//    struct{ cl_float  x, y; };
-//    struct{ cl_float  s0, s1; };
-//    struct{ cl_float  lo, hi; };
-//} cl_float2;
-typedef struct _cl_float2 { cl_float  s0, s1; } cl_float2;
 
-typedef union {
+typedef union _cl_float2 {
+    cl_float   s[2];
+} cl_float2;
+
+typedef union _cl_double2 {
     cl_double   s[2];
-    struct{ cl_double  x, y; };
-    struct{ cl_double s0, s1; };
-    struct{ cl_double lo, hi; };
 } cl_double2;
+
 /////////////////////////////////////////////
 typedef struct _cl_platform_id *    cl_platform_id;
 typedef struct _cl_device_id *      cl_device_id;
