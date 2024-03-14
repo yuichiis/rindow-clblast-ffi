@@ -4,10 +4,12 @@ namespace Rindow\CLBlast\FFI;
 use FFI;
 use FFI\Exception as FFIException;
 use RuntimeException;
+use Rindow\CLBlast\FFI\Platforms\LinuxPatch;
 
 class CLBlastFactory
 {
     private static ?FFI $ffi = null;
+    public static ?FFI $ffipf = null;
     protected array $libs_win = ['clblast.dll'];
     protected array $libs_linux = ['libclblast.so'];
 
@@ -48,6 +50,22 @@ class CLBlastFactory
             self::$ffi = $ffi;
             break;
         }
+
+        // patch for linux
+        $this->loadPlatformLib();
+    }
+
+    protected function loadPlatformLib() : void
+    {
+        if(PHP_OS!='Linux') {
+            return;
+        }
+        $headerFile = __DIR__ . "/../platforms/ubuntu/src/complexfuncs.h";
+        $filename = __DIR__ . "/../platforms/ubuntu/lib/librindowclblast.so";
+        //self::$ffipf = FFI::load($headerFile);
+        $code = file_get_contents($headerFile);
+        $ffi = FFI::cdef($code,$filename);
+        self::$ffipf = $ffi;
     }
 
     public function isAvailable() : bool
@@ -66,7 +84,11 @@ class CLBlastFactory
         if(self::$ffi==null) {
             throw new RuntimeException('clblast library not loaded.');
         }
-        return new Blas(self::$ffi);
+        $alt = self::$ffi;
+        if(PHP_OS=='Linux') {
+            $alt = new LinuxPatch(self::$ffipf);
+        }
+        return new Blas(self::$ffi, $alt);
     }
 
     public function Math(object $queue=null,object $service=null) : object

@@ -18,10 +18,12 @@ class Blas
     const CLBlastSuccess = 0;
     const CLBlastNotImplemented = -1024;
     protected FFI $ffi;
+    protected object $alt;
 
-    public function __construct(FFI $ffi)
+    public function __construct(FFI $ffi, object $alt)
     {
         $this->ffi = $ffi;
+        $this->alt = $alt;
     }
 
     /**
@@ -36,6 +38,7 @@ class Blas
         ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         $buffer_p = $ffi->cast("cl_mem",$X->_getId());
         $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
         $event_p = null;
@@ -60,7 +63,7 @@ class Blas
             }
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
-                $status = $ffi->CLBlastCscal(
+                $status = $alt->CLBlastCscal(
                     $n,$alpha,
                     $buffer_p,$offsetX,$incX,
                     $queue_p,$event_p);
@@ -68,7 +71,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
-                $status = $ffi->CLBlastZscal(
+                $status = $alt->CLBlastZscal(
                     $n,$alpha,
                     $buffer_p,$offsetX,$incX,
                     $queue_p,$event_p);
@@ -100,6 +103,7 @@ class Blas
         ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer X and Y
         if($X->dtype()!=$Y->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for X and Y");
@@ -132,7 +136,7 @@ class Blas
             }
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
-                $status = $ffi->CLBlastCaxpy($n,$alpha,
+                $status = $alt->CLBlastCaxpy($n,$alpha,
                     $bufferX_p,$offsetX,$incX,
                     $bufferY_p,$offsetY,$incY,
                     $queue_p,$event_p
@@ -141,7 +145,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
-                $status = $ffi->CLBlastZaxpy($n,$alpha,
+                $status = $alt->CLBlastZaxpy($n,$alpha,
                     $bufferX_p,$offsetX,$incX,
                     $bufferY_p,$offsetY,$incY,
                     $queue_p,$event_p
@@ -892,6 +896,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and Y
         if($A->dtype()!=$X->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and X");
@@ -945,7 +950,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
                 $beta = $this->toComplex($beta,$X->dtype());
-                $status = $ffi->CLBlastCgemv(
+                $status = $alt->CLBlastCgemv(
                     $order,
                     $trans,
                     $m,$n,
@@ -961,7 +966,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$X->dtype());
                 $beta = $this->toComplex($beta,$X->dtype());
-                $status = $ffi->CLBlastCgemv(
+                $status = $alt->CLBlastZgemv(
                     $order,
                     $trans,
                     $m,$n,
@@ -1003,6 +1008,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1061,7 +1067,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastCgemm(
+                $status = $alt->CLBlastCgemm(
                     $order,
                     $transA,
                     $transB,
@@ -1078,7 +1084,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastZgemm(
+                $status = $alt->CLBlastZgemm(
                     $order,
                     $transA,
                     $transB,
@@ -1120,6 +1126,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1171,7 +1178,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastCsymm(
+                $status = $alt->CLBlastCsymm(
                     $order,
                     $side,
                     $uplo,
@@ -1188,7 +1195,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastZsymm(
+                $status = $alt->CLBlastZsymm(
                     $order,
                     $side,
                     $uplo,
@@ -1229,6 +1236,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$C->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and C");
@@ -1274,7 +1282,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastCsyrk(
+                $status = $alt->CLBlastCsyrk(
                     $order,
                     $uplo,
                     $trans,
@@ -1290,7 +1298,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastZsyrk(
+                $status = $alt->CLBlastZsyrk(
                     $order,
                     $uplo,
                     $trans,
@@ -1331,6 +1339,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1382,7 +1391,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastCsyr2k(
+                $status = $alt->CLBlastCsyr2k(
                     $order,
                     $uplo,
                     $trans,
@@ -1399,7 +1408,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastZsyr2k(
+                $status = $alt->CLBlastZsyr2k(
                     $order,
                     $uplo,
                     $trans,
@@ -1441,6 +1450,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1487,7 +1497,7 @@ class Blas
             }
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastCtrmm(
+                $status = $alt->CLBlastCtrmm(
                     $order,
                     $side,
                     $uplo,
@@ -1503,7 +1513,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastZtrmm(
+                $status = $alt->CLBlastZtrmm(
                     $order,
                     $side,
                     $uplo,
@@ -1545,6 +1555,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and X and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1591,7 +1602,7 @@ class Blas
             }
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastCtrsm(
+                $status = $alt->CLBlastCtrsm(
                     $order,
                     $side,
                     $uplo,
@@ -1607,7 +1618,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastZtrsm(
+                $status = $alt->CLBlastZtrsm(
                     $order,
                     $side,
                     $uplo,
@@ -1646,6 +1657,7 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         // Check Buffer A and B
         if($A->dtype()!=$B->dtype()) {
             throw new InvalidArgumentException("Unmatch data type for A and B");
@@ -1690,7 +1702,7 @@ class Blas
             }
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastComatcopy(
+                $status = $alt->CLBlastComatcopy(
                     $order,
                     $trans,
                     $m,$n,
@@ -1703,7 +1715,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
-                $status = $ffi->CLBlastZomatcopy(
+                $status = $alt->CLBlastZomatcopy(
                     $order,
                     $trans,
                     $m,$n,

@@ -23,15 +23,27 @@ typedef union _cl_double2 {
 } cl_double2;
 
 /////////////////////////////////////////////
-typedef struct _cl_platform_id *    cl_platform_id;
-typedef struct _cl_device_id *      cl_device_id;
-typedef struct _cl_context *        cl_context;
-typedef struct _cl_command_queue *  cl_command_queue;
-typedef struct _cl_mem *            cl_mem;
-typedef struct _cl_program *        cl_program;
-typedef struct _cl_kernel *         cl_kernel;
-typedef struct _cl_event *          cl_event;
-typedef struct _cl_sampler *        cl_sampler;
+//typedef struct _cl_platform_id *    cl_platform_id;
+//typedef struct _cl_device_id *      cl_device_id;
+//typedef struct _cl_context *        cl_context;
+//typedef struct _cl_command_queue *  cl_command_queue;
+//typedef struct _cl_mem *            cl_mem;
+//typedef struct _cl_program *        cl_program;
+//typedef struct _cl_kernel *         cl_kernel;
+//typedef struct _cl_event *          cl_event;
+//typedef struct _cl_sampler *        cl_sampler;
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+typedef void*           cl_id_porinter;
+typedef cl_id_porinter  cl_platform_id;
+typedef cl_id_porinter  cl_device_id;
+typedef cl_id_porinter  cl_context;
+typedef cl_id_porinter  cl_command_queue;
+typedef cl_id_porinter  cl_mem;
+typedef cl_id_porinter  cl_program;
+typedef cl_id_porinter  cl_kernel;
+typedef cl_id_porinter  cl_event;
+typedef cl_id_porinter  cl_sampler;
 /////////////////////////////////////////////
 
 
