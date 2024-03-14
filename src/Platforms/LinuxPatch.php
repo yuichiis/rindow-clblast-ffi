@@ -22,7 +22,7 @@ class LinuxPatch
         int $x_offset,  // const size_t x_offset,
         int $x_inc,     // const size_t x_inc,
         object $queue,  // cl_command_queue* queue,
-        object $event,  // cl_event* event,
+        ?object $event,  // cl_event* event,
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -46,7 +46,7 @@ class LinuxPatch
         int $x_offset,  // const size_t x_offset,
         int $x_inc,     // const size_t x_inc,
         object $queue,  // cl_command_queue* queue,
-        object $event,  // cl_event* event,
+        ?object $event,  // cl_event* event,
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -74,7 +74,7 @@ class LinuxPatch
         int $y_offset,  // const size_t y_offset,
         int $y_inc,     // const size_t y_inc,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -105,7 +105,7 @@ class LinuxPatch
         int $y_offset,  // const size_t y_offset,
         int $y_inc,     // const size_t y_inc,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -143,7 +143,7 @@ class LinuxPatch
         int $y_offset,      // const size_t y_offset,
         int $y_inc,         // const size_t y_inc,
         object $queue,      // cl_command_queue* queue,
-        object $event       // cl_event* event
+        ?object $event       // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -188,7 +188,7 @@ class LinuxPatch
         int $y_offset,      // const size_t y_offset,
         int $y_inc,         // const size_t y_inc,
         object $queue,      // cl_command_queue* queue,
-        object $event       // cl_event* event
+        ?object $event       // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -236,7 +236,7 @@ class LinuxPatch
         int $c_offset,      // const size_t c_offset,
         int $c_ld,          // const size_t c_ld,
         object $queue,      // cl_command_queue* queue,
-        object $event       // cl_event* event
+        ?object $event       // cl_event* event
         ) : int             // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -286,7 +286,7 @@ class LinuxPatch
         int $c_offset,      // const size_t c_offset,
         int $c_ld,          // const size_t c_ld,
         object $queue,      // cl_command_queue* queue,
-        object $event       // cl_event* event
+        ?object $event       // cl_event* event
         ) : int             // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -335,7 +335,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -383,7 +383,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -428,7 +428,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -469,7 +469,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -514,7 +514,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -562,7 +562,7 @@ class LinuxPatch
         int $c_offset,  // const size_t c_offset,
         int $c_ld,      // const size_t c_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -608,7 +608,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -651,7 +651,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -694,7 +694,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -737,7 +737,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -777,7 +777,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -814,7 +814,7 @@ class LinuxPatch
         int $b_offset,  // const size_t b_offset,
         int $b_ld,      // const size_t b_ld,
         object $queue,  // cl_command_queue* queue,
-        object $event   // cl_event* event
+        ?object $event   // cl_event* event
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
@@ -833,5 +833,63 @@ class LinuxPatch
             $queue,     // cl_command_queue* queue,
             $event      // cl_event* event
         );
+    }
+
+    /**
+     * 
+     */
+    public function CLBlastCgemmStridedBatched(
+        int $layout,        // const CLBlastLayout layout,
+        int $a_transpose,   // const CLBlastTranspose a_transpose,
+        int $b_transpose,   // const CLBlastTranspose b_transpose,
+        int $m,             // const size_t m,
+        int $n,             // const size_t n,
+        int $k,             // const size_t k,
+        object $alpha,      // const cl_float2 *alpha,
+        object $a_buffer,   // const cl_mem a_buffer,
+        int $a_offset,      // const size_t a_offset,
+        int $a_ld,          // const size_t a_ld,
+        int $a_stride,      // const size_t a_stride,
+        object $b_buffer,   // const cl_mem b_buffer,
+        int $b_offset,      // const size_t b_offset,
+        int $b_ld,          // const size_t b_ld,
+        int $b_stride,      // const size_t b_stride,
+        object $beta,       // const cl_float2 *beta,
+        object $c_buffer,   // cl_mem c_buffer,
+        int $c_offset,      // const size_t c_offset,
+        int $c_ld,          // const size_t c_ld,
+        int $c_stride,      // const size_t c_stride,
+        int $batch_count,   // const size_t batch_count,
+        object $queue,      // cl_command_queue* queue,
+        ?object $event       // cl_event* event
+        ) : int             // CLBlastStatusCode 
+    {
+        $alpha = FFI::addr($alpha);
+        $beta  = FFI::addr($beta);
+        return $this->ffi->RindowCLBlastCgemmStridedBatched(
+            $layout,    // const CLBlastLayout layout,
+            $a_transpose,// const CLBlastTranspose a_transpose,
+            $b_transpose,// const CLBlastTranspose b_transpose,
+            $m,         // const size_t m,
+            $n,         // const size_t n,
+            $k,         // const size_t k,
+            $alpha,     // const cl_float2 *alpha,
+            $a_buffer,  // const cl_mem a_buffer,
+            $a_offset,  // const size_t a_offset,
+            $a_ld,      // const size_t a_ld,
+            $a_stride,  // const size_t a_stride,
+            $b_buffer,  // const cl_mem b_buffer,
+            $b_offset,  // const size_t b_offset,
+            $b_ld,      // const size_t b_ld,
+            $b_stride,  // const size_t b_stride,
+            $beta,      // const cl_float2 *beta,
+            $c_buffer,  // cl_mem c_buffer,
+            $c_offset,  // const size_t c_offset,
+            $c_ld,      // const size_t c_ld,
+            $c_stride,  // const size_t c_stride,
+            $batch_count,// const size_t batch_count,
+            $queue,     // cl_command_queue* queue,
+            $event      // cl_event* event
+            );
     }
 }

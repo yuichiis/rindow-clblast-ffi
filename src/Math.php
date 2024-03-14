@@ -22,10 +22,12 @@ class Math
     const CONVOLUTION = 152;
 
     protected FFI $ffi;
+    protected object $alt;
 
-    public function __construct(FFI $ffi)
+    public function __construct(FFI $ffi, object $alt)
     {
         $this->ffi = $ffi;
+        $this->alt = $alt;
     }
 
     public function sum(
@@ -683,6 +685,7 @@ class Math
     ) : void
     {
         $ffi = $this->ffi;
+        $alt = $this->alt;
         if($m<=0) {
             throw new InvalidArgumentException("m must be greater than zero");
         }
@@ -763,7 +766,7 @@ class Math
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastCgemmStridedBatched(
+                $status = $alt->CLBlastCgemmStridedBatched(
                     $order,
                     $transA,
                     $transB,

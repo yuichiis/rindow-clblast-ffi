@@ -96,6 +96,10 @@ class CLBlastFactory
         if(self::$ffi==null) {
             throw new RuntimeException('clblast library not loaded.');
         }
-        return new Math(self::$ffi);
+        $alt = self::$ffi;
+        if(PHP_OS=='Linux') {
+            $alt = new LinuxPatch(self::$ffipf);
+        }
+        return new Math(self::$ffi, $alt);
     }
 }
