@@ -30,10 +30,26 @@ trait Utils
     protected ?object $hostBufferFactory = null;
     protected ?object $openCLFactory = null;
     protected object $queue;
+    protected ?bool $fp64 = null;
 
     public function setOpenCLQueue(object $openCLQueue)
     {
         $this->queue = $openCLQueue;
+    }
+
+    protected function fp64() : bool
+    {
+        if($this->fp64!==null) {
+            return $this->fp64;
+        }
+        $devices = $this->queue->getContext()->getInfo(OpenCL::CL_CONTEXT_DEVICES);
+        $extensions = $devices->getInfo(0,OpenCL::CL_DEVICE_EXTENSIONS);
+        if(strpos($extensions,'cl_khr_fp64')===false) {
+            $this->fp64 = false;
+        } else {
+            $this->fp64 = true;
+        }
+        return $this->fp64;
     }
 
     public function hostBufferFactory() : object

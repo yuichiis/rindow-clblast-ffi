@@ -115,7 +115,8 @@ class BlasTest extends TestCase
         $blas = $this->getBlas();
 
         // float32
-        $X = $this->array([1,2,3],dtype:NDArray::float32);
+        $dtype = NDArray::float32;
+        $X = $this->array([1,2,3],dtype:$dtype);
         [$N,$alpha,$XX,$offX,$incX,$queue,$events] =
             $this->translate_scal(2,$X);
 
@@ -124,13 +125,37 @@ class BlasTest extends TestCase
         $this->assertEquals([2,4,6],$X->toArray());
 
         // complex64
-        $X = $this->array($this->toComplex([1,2,3]),dtype:NDArray::complex64);
+        $dtype = NDArray::complex64;
+        $X = $this->array($this->toComplex([1,2,3]),dtype:$dtype);
         [$N,$alpha,$XX,$offX,$incX,$queue,$events] =
             $this->translate_scal(C(2),$X);
 
         $blas->scal($N,$alpha,$XX,$offX,$incX,$queue,$events);
         $events->wait();
         $this->assertEquals($this->toComplex([2,4,6]),$X->toArray());
+
+        if($this->fp64()) {
+            // float64
+            $dtype = NDArray::float64;
+            $X = $this->array([1,2,3],dtype:$dtype);
+            [$N,$alpha,$XX,$offX,$incX,$queue,$events] =
+                $this->translate_scal(2,$X);
+
+            $blas->scal($N,$alpha,$XX,$offX,$incX,$queue,$events);
+            $events->wait();
+            $this->assertEquals([2,4,6],$X->toArray());
+
+            // complex128
+            $dtype = NDArray::complex128;
+            $X = $this->array($this->toComplex([1,2,3]),dtype:$dtype);
+            [$N,$alpha,$XX,$offX,$incX,$queue,$events] =
+                $this->translate_scal(C(2),$X);
+
+            $blas->scal($N,$alpha,$XX,$offX,$incX,$queue,$events);
+            $events->wait();
+            $this->assertEquals($this->toComplex([2,4,6]),$X->toArray());
+
+        }
     }
 
     protected function getScalTestEnv(int $NMITEM) : array
