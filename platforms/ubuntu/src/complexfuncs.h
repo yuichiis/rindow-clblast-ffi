@@ -195,7 +195,16 @@ CLBlastStatusCode RindowCLBlastCgemmStridedBatched(const CLBlastLayout layout, c
                                                         const void *beta,
                                                         cl_mem c_buffer, const size_t c_offset, const size_t c_ld, const size_t c_stride,
                                                         const size_t batch_count,
-                                                        cl_command_queue* queue, cl_event* event)
+                                                        cl_command_queue* queue, cl_event* event);
+CLBlastStatusCode RindowCLBlastZgemmStridedBatched(const CLBlastLayout layout, const CLBlastTranspose a_transpose, const CLBlastTranspose b_transpose,
+                                                        const size_t m, const size_t n, const size_t k,
+                                                        const void *alpha,
+                                                        const cl_mem a_buffer, const size_t a_offset, const size_t a_ld, const size_t a_stride,
+                                                        const cl_mem b_buffer, const size_t b_offset, const size_t b_ld, const size_t b_stride,
+                                                        const void *beta,
+                                                        cl_mem c_buffer, const size_t c_offset, const size_t c_ld, const size_t c_stride,
+                                                        const size_t batch_count,
+                                                        cl_command_queue* queue, cl_event* event);
 
 
 

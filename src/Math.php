@@ -784,7 +784,7 @@ class Math
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$A->dtype());
                 $beta = $this->toComplex($beta,$A->dtype());
-                $status = $ffi->CLBlastZgemmStridedBatched(
+                $status = $alt->CLBlastZgemmStridedBatched(
                     $order,
                     $transA,
                     $transB,

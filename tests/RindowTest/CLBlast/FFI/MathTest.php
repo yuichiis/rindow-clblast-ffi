@@ -20,8 +20,14 @@ use TypeError;
 use ArrayObject;
 use ArrayAccess;
 
+require_once __DIR__.'/Utils.php';
+use RindowTest\CLBlast\FFI\Utils;
+use function RindowTest\CLBlast\FFI\C;
+
 class MathTest extends TestCase
 {
+    use Utils;
+
     protected bool $skipDisplayInfo = true;
 
     //protected int $defaultDeviceType = OpenCL::CL_DEVICE_TYPE_DEFAULT;
@@ -33,12 +39,12 @@ class MathTest extends TestCase
     protected ?object $openblas=null;
     protected ?object $matlib=null;
 
-    public function getOpenCL()
+    public function setUp() : void
     {
-        if($this->opencl===null) {
-            $this->opencl = new OpenCLFactory();
-        }
-        return $this->opencl;
+        $ocl = $this->getOpenCL();
+        $context = $this->newContextFromType($ocl);
+        $queue = $ocl->CommandQueue($context);
+        $this->setOpenCLQueue($queue);
     }
 
     public function getMath()
@@ -1324,7 +1330,7 @@ class MathTest extends TestCase
         ];
     }
 
-    public function testgemmBatchedNormal()
+    public function testgemmBatchedFullRange()
     {
         $batch_count = 4;
         $m = 8;
@@ -1363,6 +1369,215 @@ class MathTest extends TestCase
     //
     //  gemmStridedBatched
     //
+    protected function translate_gemmStridedBatched(
+        NDArray $A,
+        NDArray $B,
+        float|object $alpha,
+        float|object $beta,
+        NDArray $C=null,
+        bool $transA=null,
+        bool $transB=null,
+        bool $conjA=null,
+        bool $conjB=null,
+        object $events=null
+        )
+    {
+        [$transA,$conjA] = $this->complementTrans($transA,$conjA,$A->dtype());
+        [$transB,$conjB] = $this->complementTrans($transB,$conjB,$B->dtype());
+        if($A->ndim()!=3) {
+            throw new InvalidArgumentException('"A" must 3D matrix');
+        }
+        if($B->ndim()!=3) {
+            throw new InvalidArgumentException('"B" must 3D matrix');
+        }
+        if($A->dtype()!=$B->dtype()) {
+            throw new InvalidArgumentException('Unmatch data type "A" and "B"');
+        }
+
+        $shapeA = $A->shape();
+        $batchA = array_shift($shapeA);
+        $shapeB = $B->shape();
+        $batchB = array_shift($shapeB);
+        if($batchA!=$batchB) {
+            throw new InvalidArgumentException('Unmatch batch size of "A" and "B"');
+        }
+        if($transA) {
+            $shapeA = [$shapeA[1],$shapeA[0]];
+        }
+        if($transB) {
+            $shapeB = [$shapeB[1],$shapeB[0]];
+        }
+
+        if($shapeA[1]!=$shapeB[0]) {
+            throw new InvalidArgumentException('The number of columns in "A" and the number of rows in "B" must be the same');
+        }
+        $AA = $A->buffer();
+        $BB = $B->buffer();
+        $offA = $A->offset();
+        $offB = $B->offset();
+        $M = $shapeA[0];
+        $N = $shapeB[1];
+        $K = $shapeA[1];
+
+        if($alpha===null) {
+            if($this->isComplex($A->dtype())) {
+                $alpha = C(1.0);
+            } else {
+                $alpha = 1.0;
+            }
+        }
+        if($beta===null) {
+            if($this->isComplex($A->dtype())) {
+                $beta = C(0.0);
+            } else {
+                $beta = 0.0;
+            }
+        }
+        if($C!=null) {
+            $shapeC = $C->shape();
+            $batchC = array_shift($shapeC);
+            if($batchA!=$batchC) {
+                throw new InvalidArgumentException('Unmatch batch size of "A" and "C"');
+            }
+            if($M!=$shapeC[0] || $N!=$shapeC[1]) {
+                throw new InvalidArgumentException('"A" and "C" must have the same number of rows."B" and "C" must have the same number of columns');
+            }
+        } else {
+            $C = $this->zeros($this->alloc([$M,$N],$A->dtype()));
+        }
+        $CC = $C->buffer();
+        $offC = $C->offset();
+
+        $lda = ($transA) ? $M : $K;
+        $ldb = ($transB) ? $K : $N;
+        $ldc = $N;
+        $strideA = $M*$K;
+        $strideB = $K*$N;
+        $strideC = $M*$N;
+        $batchCount = $batchA;
+
+        $transA = $this->transToCode($transA,$conjA);
+        $transB = $this->transToCode($transB,$conjB);
+        $order = BLAS::RowMajor;
+        if($events==null) {
+            $events = $this->getOpenCL()->EventList();
+        }
+
+        return [
+            $order,$transA,$transB,
+            $M,$N,$K,
+            $alpha,
+            $AA,$offA,$lda,$strideA,
+            $BB,$offB,$ldb,$strideB,
+            $beta,
+            $CC,$offC,$ldc,$strideC,
+            $batchCount,
+            $this->queue,$events,
+        ];
+    }
+
+    public function testGemmStridedBatchedNormal()
+    {
+        $blas = $this->getMath();
+
+        // float32
+        $dtype = NDArray::float32;
+        $A = $this->array([
+            [[1,2,3],[4,5,6]],
+            [[2,3,4],[5,6,7]],
+        ],dtype:$dtype);
+        $B = $this->array([
+            [[1,0,0],[0,1,0],[0,0,1]],
+            [[2,0,0],[0,2,0],[0,0,2]],
+        ],dtype:$dtype);
+        $alpha = 1.0;
+        $beta  = 0.0;
+        $C = $this->ones([2,2,3],dtype:$dtype);
+        $transA = false;
+        $transB = false;
+
+        [
+            $order,$transA,$transB,
+            $M,$N,$K,
+            $alpha,
+            $AA,$offA,$lda,$strideA,
+            $BB,$offB,$ldb,$strideB,
+            $beta,
+            $CC,$offC,$ldc,$strideC,
+            $batchCount,
+            $queue,$events,
+        ] = $this->translate_gemmStridedBatched($A,$B,
+                alpha:$alpha, beta:$beta, C:$C, transA:$transA, transB:$transB
+        );
+
+        $blas->gemmStridedBatched(
+            $order,$transA,$transB,
+            $M,$N,$K,
+            $alpha,
+            $AA,$offA,$lda,$strideA,
+            $BB,$offB,$ldb,$strideB,
+            $beta,
+            $CC,$offC,$ldc,$strideC,
+            $batchCount,
+            $queue,$events,
+        );
+        $events->wait();
+
+        $this->assertEquals([
+            [[1,2,3],[ 4, 5, 6]],
+            [[4,6,8],[10,12,14]],
+        ],$C->toArray());
+
+
+        // complex64
+        $dtype = NDArray::complex64;
+        $A = $this->array($this->toComplex([
+            [[1,2,3],[4,5,6]],
+            [[2,3,4],[5,6,7]],
+        ]),dtype:$dtype);
+        $B = $this->array($this->toComplex([
+            [[1,0,0],[0,1,0],[0,0,1]],
+            [[2,0,0],[0,2,0],[0,0,2]],
+        ]),dtype:$dtype);
+        $alpha = C(1.0);
+        $beta  = C(0.0);
+        $C = $this->ones([2,2,3],dtype:$dtype);
+        $transA = false;
+        $transB = false;
+
+        [
+            $order,$transA,$transB,
+            $M,$N,$K,
+            $alpha,
+            $AA,$offA,$lda,$strideA,
+            $BB,$offB,$ldb,$strideB,
+            $beta,
+            $CC,$offC,$ldc,$strideC,
+            $batchCount,
+            $queue,$events,
+        ] = $this->translate_gemmStridedBatched($A,$B,
+                alpha:$alpha, beta:$beta, C:$C, transA:$transA, transB:$transB
+        );
+
+        $blas->gemmStridedBatched(
+            $order,$transA,$transB,
+            $M,$N,$K,
+            $alpha,
+            $AA,$offA,$lda,$strideA,
+            $BB,$offB,$ldb,$strideB,
+            $beta,
+            $CC,$offC,$ldc,$strideC,
+            $batchCount,
+            $queue,$events,
+        );
+        $events->wait();
+
+        $this->assertEquals($this->toComplex([
+            [[1,2,3],[ 4, 5, 6]],
+            [[4,6,8],[10,12,14]],
+        ]),$C->toArray());
+
+    }
 
     protected function getgemmStridedBatchedTestEnv(
         $batch_count,
@@ -1427,7 +1642,7 @@ class MathTest extends TestCase
         ];
     }
 
-    public function testgemmStridedBatchedNormal()
+    public function testgemmStridedBatchedFullRange()
     {
         $batch_count = 4;
         $m = 8;

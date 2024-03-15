@@ -2339,7 +2339,7 @@ class BlasTest extends TestCase
                 throw new InvalidArgumentException('"A" and "C" must have the same number of rows."B" and "C" must have the same number of columns');
             }
         } else {
-            $C = $this->mo->zeros([$M,$N]);
+            $C = $this->zeros($this->alloc([$M,$N],$A->dtype()));
         }
         $CC = $C->buffer();
         $offC = $C->offset();
