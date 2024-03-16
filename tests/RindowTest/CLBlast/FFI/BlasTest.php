@@ -212,13 +212,21 @@ class BlasTest extends TestCase
                     $offset=0,$inc=1,$queue,$events);
         $events->wait();
         $buffer->read($queue,$hostBuffer);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
             if($i<intval($NMITEM/2)) {
-                $this->assertTrue($hostBuffer[$i]==$i*2);
+                if($hostBuffer[$i]!=$i*2) {
+                    $equals = false;
+                    break;
+                }
             } else {
-                $this->assertTrue($hostBuffer[$i]==$i);
+                if($hostBuffer[$i]!=$i) {
+                    $equals = false;
+                    break;
+                }
             }
         }
+        $this->assertTrue($equals);
     }
 
     public function testScalInvalidBufferObject()
@@ -375,9 +383,14 @@ class BlasTest extends TestCase
             $queue,$events);
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue($hostBufferY[$i]==($i*2)+($NMITEM-1-$i));
+            if($hostBufferY[$i]!=($i*2)+($NMITEM-1-$i)) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testAxpyInvalidBufferXObject()
@@ -1362,9 +1375,14 @@ class BlasTest extends TestCase
         );
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue($hostBufferY[$i]==$i);
+            if($hostBufferY[$i]!=$i) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testCopyInt8()
@@ -1380,9 +1398,14 @@ class BlasTest extends TestCase
         );
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue( $hostBufferY[$i]==(($i+128)%256)-128 );
+            if($hostBufferY[$i]!=(($i+128)%256)-128 ) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testCopyInt64()
@@ -1398,9 +1421,14 @@ class BlasTest extends TestCase
         );
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue($hostBufferY[$i]==$i);
+            if($hostBufferY[$i]!=$i) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testCopyInvalidBufferXObject()
@@ -1698,10 +1726,18 @@ class BlasTest extends TestCase
         $events->wait();
         $bufferX->read($queue,$hostBufferX);
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue($hostBufferX[$i] == $NMITEM-$i);
-            $this->assertTrue($hostBufferY[$i] == $i);
+            if($hostBufferX[$i] != $NMITEM-$i) {
+                $equals = false;
+                break;
+            }
+            if($hostBufferY[$i] != $i) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testSwapInvalidBufferXObject()
@@ -2442,9 +2478,14 @@ class BlasTest extends TestCase
             $queue,$events);
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
+        $equals = true;
         for($i=0;$i<$m;$i++) {
-            $this->assertTrue($hostBufferY[$i]==$testTruesR[$i]);
+            if($hostBufferY[$i]!=$testTruesR[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testGemvInvalidBufferAObject()
@@ -2966,9 +3007,14 @@ class BlasTest extends TestCase
             $queue,$events);
         $events->wait();
         $bufferC->read($queue,$hostBufferC);
+        $equals = true;
         for($i=0;$i<$m*$n;$i++) {
-            $this->assertTrue($hostBufferC[$i]==$testTruesR[$i]);
+            if($hostBufferC[$i]!=$testTruesR[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testGemmInvalidBufferAObject()
@@ -4903,11 +4949,19 @@ class BlasTest extends TestCase
             $queue,$events);
         $events->wait();
         $bufferB->read($queue,$hostBufferB,intval($m*$n*32/8));
+        $equals = true;
         for($i=0;$i<$n;$i++) {
             for($j=0;$j<$m;$j++) {
-                $this->assertTrue($hostBufferB[$i*$m+$j]==$testTruesR[$i*$m+$j]);
+                if($hostBufferB[$i*$m+$j]!=$testTruesR[$i*$m+$j]) {
+                    $equals = false;
+                    break;
+                }
+            }
+            if($equals==false) {
+                break;
             }
         }
+        $this->assertTrue($equals);
     }
 
     public function testOmatcopyInvalidBufferAObject()

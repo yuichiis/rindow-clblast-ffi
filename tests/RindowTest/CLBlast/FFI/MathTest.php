@@ -490,9 +490,14 @@ class MathTest extends TestCase
             $bufferY,$offsetY=0,$incY=1,$beta,$bufferZ,$offsetZ=0,$incZ=1,$queue,$events);
         $events->wait();
         $bufferZ->read($queue,$hostBufferZ,intval($NMITEM*32/8));
+        $equals = true;
         for($i=0;$i<$NMITEM;$i++) {
-            $this->assertTrue($testTruesR[$i]==$hostBufferZ[$i]);
+            if($testTruesR[$i]!=$hostBufferZ[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testHadamardInvalidBufferXObject()
@@ -685,10 +690,15 @@ class MathTest extends TestCase
         );
         $events->wait();
         $col_buffer->read($queue,$host_col_buffer);
+        $equals = true;
         for($i=0;$i<count($host_col_buffer);$i++) {
             //echo $host_col_buffer[$i]."=".$trues[$i].",";
-            $this->assertTrue($trues[$i]==$host_col_buffer[$i]);
+            if($trues[$i]!=$host_col_buffer[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     public function testim2colInvalidimbuffer()
@@ -1005,9 +1015,14 @@ class MathTest extends TestCase
             $queue,$events);
         $events->wait();
         $im_buffer->read($queue,$host_im_buffer);
+        $equals = true;
         for($i=0;$i<count($host_im_buffer);$i++) {
-            $this->assertTrue($trues[$i]==$host_im_buffer[$i]);
+            if($trues[$i]!=$host_im_buffer[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     //
@@ -1161,10 +1176,15 @@ class MathTest extends TestCase
             $queue,$events);
         $events->wait();
         $result_buffer->read($queue,$host_result_buffer);
+        $equals = true;
         for($i=0;$i<count($host_result_buffer);$i++) {
             #echo $host_result_buffer[$i].",";
-            $this->assertTrue($trues[$i]==$host_result_buffer[$i]);
+            if($trues[$i]!=$host_result_buffer[$i]) {
+                $equals = false;
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     //
@@ -1231,13 +1251,21 @@ class MathTest extends TestCase
         $events->wait();
         $bufferY->read($queue,$hostBufferY);
         #echo "R:\n";
+        $equals = true;
         for($i=0;$i<$batch_count;$i++) {
             for($j=0;$j<$NMITEM;$j++) {
                 #echo $hostBufferY[$i*$NMITEM+$j],",";
-                $this->assertTrue($hostBufferY[$i*$NMITEM+$j]==(pow($batch_count-$i,2)*1000)+($i+1)*100000);
+                if($hostBufferY[$i*$NMITEM+$j]!=(pow($batch_count-$i,2)*1000)+($i+1)*100000) {
+                    $equals = false;
+                    break;
+                }
             }
             #echo "\n";
+            if($equals==false) {
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     //
@@ -1357,13 +1385,21 @@ class MathTest extends TestCase
         );
         $events->wait();
         $bufferC->read($queue,$hostBufferC);
+        $equals = true;
         for($ii=0;$ii<$batch_count;$ii++) {
             for($i=0;$i<$m*$n;$i++) {
                 #echo $hostBufferC[$ii*$m*$n+$i].",";
-                $this->assertTrue($hostBufferC[$ii*$m*$n+$i]==$testTruesR[$ii*$m*$n+$i]);
+                if($hostBufferC[$ii*$m*$n+$i]!=$testTruesR[$ii*$m*$n+$i]) {
+                    $equals = false;
+                    break;
+                }
             }
             #echo "\n";
+            if($equals==false) {
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 
     //
@@ -1767,12 +1803,20 @@ class MathTest extends TestCase
         );
         $events->wait();
         $bufferC->read($queue,$hostBufferC);
+        $equals = true;
         for($ii=0;$ii<$batch_count;$ii++) {
             for($i=0;$i<$m*$n;$i++) {
                 #echo $hostBufferC[$ii*$m*$n+$i].",";
-                $this->assertTrue($hostBufferC[$ii*$m*$n+$i]==$testTruesR[$ii*$m*$n+$i]);
+                if($hostBufferC[$ii*$m*$n+$i]!=$testTruesR[$ii*$m*$n+$i]) {
+                    $equals = false;
+                    break;
+                }
             }
             #echo "\n";
+            if($equals==false) {
+                break;
+            }
         }
+        $this->assertTrue($equals);
     }
 }
