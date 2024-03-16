@@ -1577,6 +1577,105 @@ class MathTest extends TestCase
             [[4,6,8],[10,12,14]],
         ]),$C->toArray());
 
+        if($this->fp64()) {
+            // float64
+            $dtype = NDArray::float64;
+            $A = $this->array([
+                [[1,2,3],[4,5,6]],
+                [[2,3,4],[5,6,7]],
+            ],dtype:$dtype);
+            $B = $this->array([
+                [[1,0,0],[0,1,0],[0,0,1]],
+                [[2,0,0],[0,2,0],[0,0,2]],
+            ],dtype:$dtype);
+            $alpha = 1.0;
+            $beta  = 0.0;
+            $C = $this->ones([2,2,3],dtype:$dtype);
+            $transA = false;
+            $transB = false;
+
+            [
+                $order,$transA,$transB,
+                $M,$N,$K,
+                $alpha,
+                $AA,$offA,$lda,$strideA,
+                $BB,$offB,$ldb,$strideB,
+                $beta,
+                $CC,$offC,$ldc,$strideC,
+                $batchCount,
+                $queue,$events,
+            ] = $this->translate_gemmStridedBatched($A,$B,
+                    alpha:$alpha, beta:$beta, C:$C, transA:$transA, transB:$transB
+            );
+
+            $blas->gemmStridedBatched(
+                $order,$transA,$transB,
+                $M,$N,$K,
+                $alpha,
+                $AA,$offA,$lda,$strideA,
+                $BB,$offB,$ldb,$strideB,
+                $beta,
+                $CC,$offC,$ldc,$strideC,
+                $batchCount,
+                $queue,$events,
+            );
+            $events->wait();
+
+            $this->assertEquals([
+                [[1,2,3],[ 4, 5, 6]],
+                [[4,6,8],[10,12,14]],
+            ],$C->toArray());
+
+
+            // complex128
+            $dtype = NDArray::complex128;
+            $A = $this->array($this->toComplex([
+                [[1,2,3],[4,5,6]],
+                [[2,3,4],[5,6,7]],
+            ]),dtype:$dtype);
+            $B = $this->array($this->toComplex([
+                [[1,0,0],[0,1,0],[0,0,1]],
+                [[2,0,0],[0,2,0],[0,0,2]],
+            ]),dtype:$dtype);
+            $alpha = C(1.0);
+            $beta  = C(0.0);
+            $C = $this->ones([2,2,3],dtype:$dtype);
+            $transA = false;
+            $transB = false;
+
+            [
+                $order,$transA,$transB,
+                $M,$N,$K,
+                $alpha,
+                $AA,$offA,$lda,$strideA,
+                $BB,$offB,$ldb,$strideB,
+                $beta,
+                $CC,$offC,$ldc,$strideC,
+                $batchCount,
+                $queue,$events,
+            ] = $this->translate_gemmStridedBatched($A,$B,
+                    alpha:$alpha, beta:$beta, C:$C, transA:$transA, transB:$transB
+            );
+
+            $blas->gemmStridedBatched(
+                $order,$transA,$transB,
+                $M,$N,$K,
+                $alpha,
+                $AA,$offA,$lda,$strideA,
+                $BB,$offB,$ldb,$strideB,
+                $beta,
+                $CC,$offC,$ldc,$strideC,
+                $batchCount,
+                $queue,$events,
+            );
+            $events->wait();
+
+            $this->assertEquals($this->toComplex([
+                [[1,2,3],[ 4, 5, 6]],
+                [[4,6,8],[10,12,14]],
+            ]),$C->toArray());
+
+        }
     }
 
     protected function getgemmStridedBatchedTestEnv(
