@@ -10,7 +10,6 @@ Status:
 
 Please see the documents about Buffer objects on [Rindow Mathematics](https://rindow.github.io/mathematics/acceleration/opencl.html#rindow-clblast-ffi) web pages.
 
-
 Requirements
 ============
 
