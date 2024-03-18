@@ -21,6 +21,9 @@ class CLBlastFactory
         if(self::$ffi!==null) {
             return;
         }
+        if(!extension_loaded('ffi')) {
+            return;
+        }
         $headerFile = $headerFile ?? __DIR__ . "/clblast_c.h";
 
         if($libFiles==null) {
