@@ -597,6 +597,7 @@ class Blas
                 try {
                     $Y->copy($queue,$X,$bytes,$src_offset,$dst_offset,$event);
                 } catch(RuntimeException $e) {
+                    $status = $e->getCode();
                     throw new RuntimeException("CLBlast?copy error=$status", $status, $e);
                 }
                 // skip to move raw event 

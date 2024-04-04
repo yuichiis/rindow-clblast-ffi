@@ -2,6 +2,7 @@
 namespace Rindow\CLBlast\FFI;
 
 use Interop\Polite\Math\Matrix\NDArray;
+use InvalidArgumentException;
 
 trait Utils
 {
