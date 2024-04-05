@@ -1,18 +1,19 @@
 #!/usr/bin/bash
 
-CLBLASTVERSION=1.6.2
+#CLBLASTVERSION=1.6.2
+CLBLASTVERSION=1.5.2
 
-#. /etc/os-release
-
-FILENAME=CLBlast-${CLBLASTVERSION}-linux-x86_64
+#FILENAME=CLBlast-${CLBLASTVERSION}-linux-x86_64
+FILENAME=CLBlast-${CLBLASTVERSION}-Linux-x64
 TARGET=./pkgwork
 
 
-wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.zip
+#wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.zip
+wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.tar.xz
 
-unzip ${FILENAME}.zip
-tar xvf ${FILENAME}.tar.gz
-#xz -dc ${FILENAME}.tar.xz | tar xvf -
+#unzip ${FILENAME}.zip
+#tar xvf ${FILENAME}.tar.gz
+xz -dc ${FILENAME}.tar.xz | tar xvf -
 rm -rf ${TARGET}
 mkdir ${TARGET}
 mkdir ${TARGET}/DEBIAN
@@ -37,7 +38,8 @@ cat ./clblast.pc.orig  | sed -e s/^prefix=.*$/prefix=\\/usr/ > ${TARGET}/usr/lib
 rm ./clblast.pc.orig
 rm clblast_${CLBLASTVERSION}_amd64.deb
 fakeroot dpkg-deb --build pkgwork .
-rm ${FILENAME}.zip
-rm ${FILENAME}.tar.gz
+rm -f ${FILENAME}.tar.xz
+rm -f ${FILENAME}.zip
+rm -f ${FILENAME}.tar.gz
 rm -rf ${FILENAME}
 rm -rf ${TARGET}
