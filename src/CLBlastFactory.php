@@ -11,7 +11,7 @@ class CLBlastFactory
     private static ?FFI $ffi = null;
     public static ?FFI $ffipf = null;
     protected array $libs_win = ['clblast.dll'];
-    protected array $libs_linux = ['libclblast.so'];
+    protected array $libs_linux = ['libclblast.so.1'];
 
     public function __construct(
         string $headerFile=null,
