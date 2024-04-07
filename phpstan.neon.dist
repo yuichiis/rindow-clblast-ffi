@@ -1,0 +1,26 @@
+includes:
+	- phpstan-interop.neon
+
+parameters:
+	level: 6
+	paths:
+		- src
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method FFI::#"
+
+#	- phpstan-interop.neon
+# level 7
+#		-
+#			message: "#^Call to an undefined method object::#"
+#		-
+#			message: "#^Access to an undefined property object::\\$real#"
+#			path: src/ComplexUtils.php
+#		-
+#			message: "#^Access to an undefined property object::\\$imag#"
+#			path: src/ComplexUtils.php
+# level 8
+#		-
+#			message: "#^Cannot access property \\$real#"
+#		-
+#			message: "#^Cannot access property \\$imag#"
