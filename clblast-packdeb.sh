@@ -1,19 +1,19 @@
 #!/usr/bin/bash
 
-#CLBLASTVERSION=1.6.2
-CLBLASTVERSION=1.5.2
+CLBLASTVERSION=1.6.2
+#CLBLASTVERSION=1.5.2
 
-#FILENAME=CLBlast-${CLBLASTVERSION}-linux-x86_64
-FILENAME=CLBlast-${CLBLASTVERSION}-Linux-x64
+FILENAME=CLBlast-${CLBLASTVERSION}-linux-x86_64
+#FILENAME=CLBlast-${CLBLASTVERSION}-Linux-x64
 TARGET=./pkgwork
 
 
-#wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.zip
-wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.tar.xz
+wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.zip
+#wget https://github.com/CNugteren/CLBlast/releases/download/${CLBLASTVERSION}/${FILENAME}.tar.xz
 
-#unzip ${FILENAME}.zip
-#tar xvf ${FILENAME}.tar.gz
-xz -dc ${FILENAME}.tar.xz | tar xvf -
+unzip ${FILENAME}.zip
+tar xvf ${FILENAME}.tar.gz
+#xz -dc ${FILENAME}.tar.xz | tar xvf -
 rm -rf ${TARGET}
 mkdir ${TARGET}
 mkdir ${TARGET}/DEBIAN
