@@ -10,6 +10,6 @@ $loader->addPsr4('Rindow\\OpenCL\\FFI\\',__DIR__.'/../../rindow-opencl-ffi/src')
 $loader->addPsr4('Rindow\\Math\\Buffer\\FFI\\',__DIR__.'/../../rindow-math-buffer-ffi/src');
 $loader->addPsr4('Rindow\\OpenBLAS\\FFI\\',__DIR__.'/../../rindow-openblas-ffi/src');
 $loader->addPsr4('Rindow\\Matlib\\FFI\\',__DIR__.'/../../rindow-matlib-ffi/src');
-$loader->addPsr4('Interop\\Polite\\Math\\', __DIR__.'/../../../interop-phpobjects/polite-math/src');
+$loader->addPsr4('Interop\\Polite\\Math\\', __DIR__.'/../../polite-math/src');
 
 return $loader;
