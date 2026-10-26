@@ -590,10 +590,10 @@ class Blas
                 if($incX!=1||$incY!=1) {
                     throw new InvalidArgumentException("clEnqueueCopyBuffer not supports incX and incY.");
                 }
-                $value_size = $X->value_size();
-                $bytes = $value_size*$n;
-                $src_offset = $value_size*$offsetX;
-                $dst_offset = $value_size*$offsetY;
+                $valueSize = $X->valueSize();
+                $bytes = $valueSize*$n;
+                $src_offset = $valueSize*$offsetX;
+                $dst_offset = $valueSize*$offsetY;
                 try {
                     $Y->copy($queue,$X,$bytes,$src_offset,$dst_offset,$event);
                 } catch(RuntimeException $e) {

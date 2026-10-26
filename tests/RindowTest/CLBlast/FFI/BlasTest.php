@@ -1388,10 +1388,10 @@ class BlasTest extends TestCase
             $hostBufferX[$i]=$i;
             $hostBufferY[$i]=$NMITEM-1-$i;
         }
-        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->value_size()),
+        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->valueSize()),
             OpenCL::CL_MEM_READ_WRITE|OpenCL::CL_MEM_COPY_HOST_PTR,
             $hostBufferX);
-        $bufferY = $ocl->Buffer($context,intval($NMITEM*$hostBufferY->value_size()),
+        $bufferY = $ocl->Buffer($context,intval($NMITEM*$hostBufferY->valueSize()),
             OpenCL::CL_MEM_READ_WRITE|OpenCL::CL_MEM_COPY_HOST_PTR,
             $hostBufferY);
         $blas = $this->getBlas();
@@ -1584,10 +1584,10 @@ class BlasTest extends TestCase
             $hostBufferX[$i]=$i/$NMITEM;
         }
         $nrm2 = $this->getOpenBLAS()->nrm2($NMITEM,$hostBufferX, 0, 1);
-        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->value_size()),
+        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->valueSize()),
             OpenCL::CL_MEM_READ_WRITE|OpenCL::CL_MEM_COPY_HOST_PTR,
             $hostBufferX);
-        $bufferR = $ocl->Buffer($context,$hostBufferR->value_size(),
+        $bufferR = $ocl->Buffer($context,$hostBufferR->valueSize(),
             OpenCL::CL_MEM_WRITE_ONLY);
         $blas = $this->getBlas();
         $events = $ocl->EventList();
@@ -1739,10 +1739,10 @@ class BlasTest extends TestCase
             $hostBufferX[$i] = $i;
             $hostBufferY[$i] = $NMITEM-$i;
         }
-        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->value_size()),
+        $bufferX = $ocl->Buffer($context,intval($NMITEM*$hostBufferX->valueSize()),
             OpenCL::CL_MEM_READ_WRITE|OpenCL::CL_MEM_COPY_HOST_PTR,
             $hostBufferX);
-        $bufferY = $ocl->Buffer($context,intval($NMITEM*$hostBufferY->value_size()),
+        $bufferY = $ocl->Buffer($context,intval($NMITEM*$hostBufferY->valueSize()),
             OpenCL::CL_MEM_READ_WRITE|OpenCL::CL_MEM_COPY_HOST_PTR,
             $hostBufferY);
         $blas = $this->getBlas();
