@@ -62,7 +62,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
                 $status = $alt->CLBlastCscal(
                     $n,$alpha,
                     $buffer_p,$offsetX,$incX,
@@ -70,7 +70,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
                 $status = $alt->CLBlastZscal(
                     $n,$alpha,
                     $buffer_p,$offsetX,$incX,
@@ -135,7 +135,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
                 $status = $alt->CLBlastCaxpy($n,$alpha,
                     $bufferX_p,$offsetX,$incX,
                     $bufferY_p,$offsetY,$incY,
@@ -144,7 +144,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
                 $status = $alt->CLBlastZaxpy($n,$alpha,
                     $bufferX_p,$offsetX,$incX,
                     $bufferY_p,$offsetY,$incY,
@@ -1088,8 +1088,8 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
-                $beta = $this->toComplex($beta,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$X->dtype(),'beta');
                 $status = $alt->CLBlastCgemv(
                     $order,
                     $trans,
@@ -1104,8 +1104,8 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$X->dtype());
-                $beta = $this->toComplex($beta,$X->dtype());
+                $alpha = $this->toComplex($alpha,$X->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$X->dtype(),'beta');
                 $status = $alt->CLBlastZgemv(
                     $order,
                     $trans,
@@ -1295,8 +1295,8 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastCgemm(
                     $order,
                     $transA,
@@ -1312,8 +1312,8 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastZgemm(
                     $order,
                     $transA,
@@ -1406,8 +1406,8 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastCsymm(
                     $order,
                     $side,
@@ -1423,8 +1423,8 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastZsymm(
                     $order,
                     $side,
@@ -1510,8 +1510,8 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastCsyrk(
                     $order,
                     $uplo,
@@ -1526,8 +1526,8 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastZsyrk(
                     $order,
                     $uplo,
@@ -1619,8 +1619,8 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastCsyr2k(
                     $order,
                     $uplo,
@@ -1636,8 +1636,8 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastZsyr2k(
                     $order,
                     $uplo,
@@ -1726,7 +1726,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastCtrmm(
                     $order,
                     $side,
@@ -1742,7 +1742,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastZtrmm(
                     $order,
                     $side,
@@ -1831,7 +1831,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastCtrsm(
                     $order,
                     $side,
@@ -1847,7 +1847,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastZtrsm(
                     $order,
                     $side,
@@ -1931,7 +1931,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastComatcopy(
                     $order,
                     $trans,
@@ -1944,7 +1944,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
                 $status = $alt->CLBlastZomatcopy(
                     $order,
                     $trans,

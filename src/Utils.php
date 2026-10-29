@@ -11,8 +11,11 @@ class cl_float2_t {
 
 trait Utils
 {
-    protected function toComplex(object $from,int $dtype) : object
+    protected function toComplex(float|object $from,int $dtype, string $name) : object
     {
+        if(is_numeric($from)) {
+            throw new InvalidArgumentException("$name is not complex");
+        }
         $ffi = $this->ffi;
         switch($dtype) {
             case NDArray::complex64: {
