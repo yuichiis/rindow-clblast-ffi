@@ -6259,6 +6259,8 @@ class BlasTest extends TestCase
     public function testGbmvComplex($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $alpha = C(1.0);
         $beta  = C(0.0);
@@ -6279,6 +6281,8 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             $beta,
             $Y->buffer(),$Y->offset(),1
+,
+            $queue,$events
         );
         $expected = [C(3,3),C(9,3),C(7,-5)];
         $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
@@ -6288,6 +6292,8 @@ class BlasTest extends TestCase
     public function testSbmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $dense = [
             [2,1,0],
@@ -6307,6 +6313,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 0.0,
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
         }
@@ -6316,6 +6324,8 @@ class BlasTest extends TestCase
     public function testSpmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $dense = [
             [2,1,0],
@@ -6334,6 +6344,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 0.0,
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
         }
@@ -6343,6 +6355,8 @@ class BlasTest extends TestCase
     public function testSymvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $A = $this->ndarray([
             [2,1,0],
@@ -6360,6 +6374,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 0.0,
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
         }
@@ -6369,6 +6385,8 @@ class BlasTest extends TestCase
     public function testHemvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $A = $this->ndarray([
             [C(2),C(1,1),C(0)],
@@ -6386,6 +6404,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 C(0.0),
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $expected = [C(3,1),C(5,1),C(5,-2)];
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
@@ -6396,6 +6416,8 @@ class BlasTest extends TestCase
     public function testHpmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $dense = [
             [C(2),C(1,1),C(0)],
@@ -6414,6 +6436,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 C(0.0),
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $expected = [C(3,1),C(5,1),C(5,-2)];
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
@@ -6424,6 +6448,8 @@ class BlasTest extends TestCase
     public function testHbmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $dense = [
             [C(2),C(1,1),C(0)],
@@ -6443,6 +6469,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 C(0.0),
                 $Y->buffer(),$Y->offset(),1
+,
+                $queue,$events
             );
             $expected = [C(3,1),C(5,1),C(5,-2)];
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
@@ -6453,6 +6481,8 @@ class BlasTest extends TestCase
     public function testTrmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $upper = [
             [2,1,3],
@@ -6478,6 +6508,8 @@ class BlasTest extends TestCase
                 BLAS::RowMajor,$uplo,$trans,$diag,3,
                 $A->buffer(),$A->offset(),3,
                 $X->buffer(),$X->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
         }
@@ -6487,6 +6519,8 @@ class BlasTest extends TestCase
     public function testTbmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $upper = [
             [2,1,0],
@@ -6513,6 +6547,8 @@ class BlasTest extends TestCase
                 BLAS::RowMajor,$uplo,$trans,$diag,3,1,
                 $A->buffer(),$A->offset(),2,
                 $X->buffer(),$X->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
         }
@@ -6522,6 +6558,8 @@ class BlasTest extends TestCase
     public function testTpmvNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $upper = [
             [2,1,3],
@@ -6547,15 +6585,23 @@ class BlasTest extends TestCase
                 BLAS::RowMajor,$uplo,$trans,$diag,3,
                 $Ap->buffer(),$Ap->offset(),
                 $X->buffer(),$X->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
         }
     }
 
+    /**
+     * NOT Implemented in CLBlast library
+     */
     #[DataProvider('providerDtypes')]
     public function testTbsvNormal($params)
     {
+        $this->markTestSkipped('NOT Implemented in CLBlast library.');
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $upper = [
             [2,1,0],
@@ -6582,15 +6628,23 @@ class BlasTest extends TestCase
                 BLAS::RowMajor,$uplo,$trans,$diag,3,1,
                 $A->buffer(),$A->offset(),2,
                 $X->buffer(),$X->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray([1,2,3],$dtype),$X));
         }
     }
 
+    /**
+     * NOT Implemented in CLBlast library
+     */
     #[DataProvider('providerDtypes')]
     public function testTpsvNormal($params)
     {
+        $this->markTestSkipped('NOT Implemented in CLBlast library.');
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $upper = [
             [2,1,0],
@@ -6616,6 +6670,8 @@ class BlasTest extends TestCase
                 BLAS::RowMajor,$uplo,$trans,$diag,3,
                 $Ap->buffer(),$Ap->offset(),
                 $X->buffer(),$X->offset(),1
+,
+                $queue,$events
             );
             $this->assertTrue($this->isclose($this->ndarray([1,2,3],$dtype),$X));
         }
@@ -6625,6 +6681,8 @@ class BlasTest extends TestCase
     public function testGerNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [1,2,3];
         $y = [4,5];
@@ -6638,6 +6696,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 $Y->buffer(),$Y->offset(),1,
                 $A->buffer(),$A->offset(),2
+,
+                $queue,$events
             );
             $expected = ($alpha==1.0) ?
                 [[4,5],[8,10],[12,15]] :
@@ -6650,6 +6710,8 @@ class BlasTest extends TestCase
     public function testGeruNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $A = $this->zeros([3,2],dtype:$dtype);
         $X = $this->ndarray([C(1,1),C(2),C(3,-1)],$dtype);
@@ -6660,6 +6722,8 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             $Y->buffer(),$Y->offset(),1,
             $A->buffer(),$A->offset(),2
+,
+            $queue,$events
         );
         $expected = [
             [C(3,1),C(0,2)],
@@ -6673,6 +6737,8 @@ class BlasTest extends TestCase
     public function testGercNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $A = $this->zeros([3,2],dtype:$dtype);
         $X = $this->ndarray([C(1,1),C(2),C(3,-1)],$dtype);
@@ -6683,6 +6749,8 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             $Y->buffer(),$Y->offset(),1,
             $A->buffer(),$A->offset(),2
+,
+            $queue,$events
         );
         $expected = [
             [C(1,3),C(2)],
@@ -6696,6 +6764,8 @@ class BlasTest extends TestCase
     public function testSyrNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [1,2,3];
         foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
@@ -6706,6 +6776,8 @@ class BlasTest extends TestCase
                 1.0,
                 $X->buffer(),$X->offset(),1,
                 $A->buffer(),$A->offset(),3
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [[1,2,3],[0,4,6],[0,0,9]] :
@@ -6718,6 +6790,8 @@ class BlasTest extends TestCase
     public function testSprNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [1,2,3];
         foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
@@ -6728,6 +6802,8 @@ class BlasTest extends TestCase
                 1.0,
                 $X->buffer(),$X->offset(),1,
                 $Ap->buffer(),$Ap->offset()
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [1,2,3,4,6,9] :
@@ -6740,6 +6816,8 @@ class BlasTest extends TestCase
     public function testSyr2Normal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [1,2,3];
         $y = [4,5,6];
@@ -6753,6 +6831,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 $Y->buffer(),$Y->offset(),1,
                 $A->buffer(),$A->offset(),3
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [[8,13,18],[0,20,27],[0,0,36]] :
@@ -6765,6 +6845,8 @@ class BlasTest extends TestCase
     public function testSpr2Normal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [1,2,3];
         $y = [4,5,6];
@@ -6778,6 +6860,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 $Y->buffer(),$Y->offset(),1,
                 $Ap->buffer(),$Ap->offset()
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [8,13,18,20,27,36] :
@@ -6790,6 +6874,8 @@ class BlasTest extends TestCase
     public function testHerNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [C(1,1),C(2),C(3,-1)];
         foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
@@ -6800,6 +6886,8 @@ class BlasTest extends TestCase
                 1.0,
                 $X->buffer(),$X->offset(),1,
                 $A->buffer(),$A->offset(),3
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [[C(2),C(2,2),C(2,4)],[C(0),C(4),C(6,2)],[C(0),C(0),C(10)]] :
@@ -6812,6 +6900,8 @@ class BlasTest extends TestCase
     public function testHprNormal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [C(1,1),C(2),C(3,-1)];
         foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
@@ -6822,6 +6912,8 @@ class BlasTest extends TestCase
                 1.0,
                 $X->buffer(),$X->offset(),1,
                 $Ap->buffer(),$Ap->offset()
+,
+                $queue,$events
             );
             //echo 'uplo:'.(($uplo==BLAS::Upper)?'Upper':'Lower')."\n";
             //echo $this->arrayToString($Ap)."\n";
@@ -6836,6 +6928,8 @@ class BlasTest extends TestCase
     public function testHer2Normal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [C(1,1),C(2),C(3,-1)];
         $y = [C(2,-1),C(1,1),C(4)];
@@ -6849,6 +6943,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 $Y->buffer(),$Y->offset(),1,
                 $A->buffer(),$A->offset(),3
+,
+                $queue,$events
             );
             $expected = ($uplo==BLAS::Upper) ?
                 [[C(2),C(6,-2),C(11,3)],[C(0),C(4),C(10,4)],[C(0),C(0),C(24)]] :
@@ -6861,6 +6957,8 @@ class BlasTest extends TestCase
     public function testHpr2Normal($params)
     {
         extract($params);
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $blas = $this->getBlas();
         $x = [C(1,1),C(2),C(3,-1)];
         $y = [C(2,-1),C(1,1),C(4)];
@@ -6874,6 +6972,8 @@ class BlasTest extends TestCase
                 $X->buffer(),$X->offset(),1,
                 $Y->buffer(),$Y->offset(),1,
                 $Ap->buffer(),$Ap->offset()
+,
+                $queue,$events
             );
             //echo 'uplo:'.(($uplo==BLAS::Upper)?'Upper':'Lower')."\n";
             //echo $this->arrayToString($Ap)."\n";
@@ -6887,6 +6987,8 @@ class BlasTest extends TestCase
     public function testGbmvMinusKl()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $A = $this->array([1,2,3,4],dtype:NDArray::float32);
         $X = $this->array([1,2],dtype:NDArray::float32);
         $Y = $this->array([0,0],dtype:NDArray::float32);
@@ -6898,12 +7000,16 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             0.0,
             $Y->buffer(),$Y->offset(),1
+,
+            $queue,$events
         );
     }
 
     public function testGbmvIllegalBufferA()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $A = $this->array([1,2,3],dtype:NDArray::float32);
         $X = $this->array([1,2],dtype:NDArray::float32);
         $Y = $this->array([0,0],dtype:NDArray::float32);
@@ -6915,12 +7021,16 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             0.0,
             $Y->buffer(),$Y->offset(),1
+,
+            $queue,$events
         );
     }
 
     public function testSymvMinusN()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $A = $this->array([1],dtype:NDArray::float32);
         $X = $this->array([1],dtype:NDArray::float32);
         $Y = $this->array([0],dtype:NDArray::float32);
@@ -6932,12 +7042,16 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             0.0,
             $Y->buffer(),$Y->offset(),1
+,
+            $queue,$events
         );
     }
 
     public function testTrmvMinusLdA()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $A = $this->array([1,2,3,4],dtype:NDArray::float32);
         $X = $this->array([1,2],dtype:NDArray::float32);
         $this->expectException(InvalidArgumentException::class);
@@ -6945,12 +7059,16 @@ class BlasTest extends TestCase
             BLAS::RowMajor,BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,2,
             $A->buffer(),$A->offset(),0,
             $X->buffer(),$X->offset(),1
+,
+            $queue,$events
         );
     }
 
     public function testSprOverflowBufferAp()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $X = $this->array([1,2,3],dtype:NDArray::float32);
         $Ap = $this->array([1,2,3,4,5],dtype:NDArray::float32);
         $this->expectException(InvalidArgumentException::class);
@@ -6959,12 +7077,16 @@ class BlasTest extends TestCase
             1.0,
             $X->buffer(),$X->offset(),1,
             $Ap->buffer(),$Ap->offset()
+,
+            $queue,$events
         );
     }
 
     public function testGerIllegalBufferA()
     {
         $blas = $this->getBlas();
+        $queue = $this->queue;
+        $events = $this->getOpenCL()->EventList();
         $X = $this->array([1,2,3],dtype:NDArray::float32);
         $Y = $this->array([1,2],dtype:NDArray::float32);
         $A = $this->array([1,2,3,4,5],dtype:NDArray::float32);
@@ -6975,6 +7097,8 @@ class BlasTest extends TestCase
             $X->buffer(),$X->offset(),1,
             $Y->buffer(),$Y->offset(),1,
             $A->buffer(),$A->offset(),2
+,
+            $queue,$events
         );
     }
 
