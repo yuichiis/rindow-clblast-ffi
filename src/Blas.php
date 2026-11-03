@@ -1221,6 +1221,1300 @@ class Blas
         }
     }
 
+    public function gbmv(
+        int $order,
+        int $trans,
+        int $m,
+        int $n,
+        int $kl,
+        int $ku,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        CommandQueue $queue,
+        ?EventList $event=null
+    ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("m", $m);
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_band_parameter("kl", $kl);
+        $this->assert_band_parameter("ku", $ku);
+
+        // Check Buffer A
+        $bandRows = $kl + $ku + 1;
+        $cols = ($order==BLASIF::RowMajor) ? $m : $n;
+        $this->assert_band_matrix_buffer_spec("A", $A, $bandRows, $cols, $offsetA, $ldA, $order);
+
+        // Check transA code
+        $this->assert_transpose_parameter($trans, 'A');
+        if($trans==BLASIF::NoTrans || $trans==BLASIF::ConjNoTrans ) {
+            $lenX = $n; $lenY = $m;
+        } else {
+            $lenX = $m; $lenY = $n;
+        }
+        // Check Buffer X
+        $this->assert_vector_buffer_spec("X", $X, $lenX, $offsetX, $incX);
+        // Check Buffer Y
+        $this->assert_vector_buffer_spec("Y", $Y, $lenY, $offsetY, $incY);
+
+        // Check Buffer A and X and Y
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferX_p = $ffi->cast("cl_mem",$X->_getId());
+        $bufferY_p = $ffi->cast("cl_mem",$Y->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->CLBlastSgbmv(
+                    $order, $trans,
+                    $m, $n, $kl, $ku,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->CLBlastDgbmv(
+                    $order, $trans,
+                    $m, $n, $kl, $ku,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $ffi->CLBlastCgbmv(
+                    $order, $trans,
+                    $m, $n, $kl, $ku,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $ffi->CLBlastZgbmv(
+                    $order, $trans,
+                    $m, $n, $kl, $ku,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferX_p,$offsetX,$incX,
+                    $beta,
+                    $bufferY_p,$offsetY,$incY,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function sbmv(
+        int $order,
+        int $uplo,
+        int $n,
+        int $k,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_band_parameter("k", $k);
+        $this->assert_band_matrix_buffer_spec("A", $A, $k+1, $n, $offsetA, $ldA, $order);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_ssbmv(
+                    $order, $uplo,
+                    $n, $k,
+                    $alpha,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dsbmv(
+                    $order, $uplo,
+                    $n, $k,
+                    $alpha,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function spmv(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $Ap, int $offsetAp,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_sspmv(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dspmv(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function symv(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_ssymv(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dsymv(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $beta,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function hemv(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_chemv(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_zhemv(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function hpmv(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $Ap, int $offsetAp,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_chpmv(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_zhpmv(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function hbmv(
+        int $order,
+        int $uplo,
+        int $n,
+        int $k,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        float|object $beta,
+        DeviceBuffer $Y, int $offsetY, int $incY ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_band_parameter("k", $k);
+        $this->assert_band_matrix_buffer_spec("A", $A, $k+1, $n, $offsetA, $ldA, $order);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_chbmv(
+                    $order, $uplo,
+                    $n, $k,
+                    $alphaptr,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $beta = $this->toComplex($beta,$dtype,'beta');
+                $betaptr = FFI::addr($beta);
+                $ffi->cblas_zhbmv(
+                    $order, $uplo,
+                    $n, $k,
+                    $alphaptr,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX,
+                    $betaptr,
+                    $Y->addr($offsetY),$incY);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function trmv(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $diag,
+        int $n,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+        $this->assert_transpose_parameter($trans, 'A');
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_strmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dtrmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex64:{
+                $ffi->cblas_ctrmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_ztrmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function tbmv(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $diag,
+        int $n,
+        int $k,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_band_parameter("k", $k);
+        $this->assert_band_matrix_buffer_spec("A", $A, $k+1, $n, $offsetA, $ldA, $order);
+        $this->assert_transpose_parameter($trans, 'A');
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_stbmv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dtbmv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex64:{
+                $ffi->cblas_ctbmv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_ztbmv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function tpmv(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $diag,
+        int $n,
+        DeviceBuffer $Ap, int $offsetAp,
+        DeviceBuffer $X, int $offsetX, int $incX ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+        $this->assert_transpose_parameter($trans, 'A');
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_stpmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dtpmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex64:{
+                $ffi->cblas_ctpmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_ztpmv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function tbsv(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $diag,
+        int $n,
+        int $k,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $X, int $offsetX, int $incX ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_band_parameter("k", $k);
+        $this->assert_band_matrix_buffer_spec("A", $A, $k+1, $n, $offsetA, $ldA, $order);
+        $this->assert_transpose_parameter($trans, 'A');
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_stbsv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dtbsv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex64:{
+                $ffi->cblas_ctbsv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_ztbsv(
+                    $order, $uplo, $trans, $diag,
+                    $n, $k,
+                    $A->addr($offsetA),$ldA,
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function tpsv(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $diag,
+        int $n,
+        DeviceBuffer $Ap, int $offsetAp,
+        DeviceBuffer $X, int $offsetX, int $incX ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+        $this->assert_transpose_parameter($trans, 'A');
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_stpsv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dtpsv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex64:{
+                $ffi->cblas_ctpsv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_ztpsv(
+                    $order, $uplo, $trans, $diag,
+                    $n,
+                    $Ap->addr($offsetAp),
+                    $X->addr($offsetX),$incX);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function ger(
+        int $order,
+        int $m,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("m", $m);
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $m, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_matrix_buffer_spec_with_order("A", $A, $m, $n, $offsetA, $ldA, $order);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_sger(
+                    $order,
+                    $m, $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dger(
+                    $order,
+                    $m, $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function geru(
+        int $order,
+        int $m,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("m", $m);
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $m, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_matrix_buffer_spec_with_order("A", $A, $m, $n, $offsetA, $ldA, $order);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_cgeru(
+                    $order,
+                    $m, $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_zgeru(
+                    $order,
+                    $m, $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function gerc(
+        int $order,
+        int $m,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("m", $m);
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $m, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_matrix_buffer_spec_with_order("A", $A, $m, $n, $offsetA, $ldA, $order);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_cgerc(
+                    $order,
+                    $m, $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_zgerc(
+                    $order,
+                    $m, $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function syr(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_ssyr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dsyr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function spr(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Ap, int $offsetAp ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_sspr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dspr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function syr2(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_ssyr2(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dsyr2(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function spr2(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $Ap, int $offsetAp ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::float32:{
+                $ffi->cblas_sspr2(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            case NDArray::float64:{
+                $ffi->cblas_dspr2(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function her(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X");
+        }
+        if(is_object($alpha)) {
+            $alpha = $alpha->real;
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $ffi->cblas_cher(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_zher(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function hpr(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Ap, int $offsetAp ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X");
+        }
+        if(is_object($alpha)) {
+            $alpha = $alpha->real;
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $ffi->cblas_chpr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            case NDArray::complex128:{
+                $ffi->cblas_zhpr(
+                    $order, $uplo,
+                    $n,
+                    $alpha,
+                    $X->addr($offsetX),$incX,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function her2(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $A, int $offsetA, int $ldA ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_matrix_buffer_spec("A", $A, $n, $n, $offsetA, $ldA);
+
+        $dtype = $A->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_cher2(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_zher2(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $A->addr($offsetA),$ldA);
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
+    public function hpr2(
+        int $order,
+        int $uplo,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $X, int $offsetX, int $incX,
+        DeviceBuffer $Y, int $offsetY, int $incY,
+        DeviceBuffer $Ap, int $offsetAp ) : void
+    {
+        $ffi= $this->ffi;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_vector_buffer_spec("X", $X, $n, $offsetX, $incX);
+        $this->assert_vector_buffer_spec("Y", $Y, $n, $offsetY, $incY);
+        $this->assert_packed_matrix_buffer_spec("Ap", $Ap, $n, $offsetAp);
+
+        $dtype = $Ap->dtype();
+        if($dtype!=$X->dtype() || $dtype!=$Y->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for Ap and X and Y");
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_chpr2(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$dtype,'alpha');
+                $alphaptr = FFI::addr($alpha);
+                $ffi->cblas_zhpr2(
+                    $order, $uplo,
+                    $n,
+                    $alphaptr,
+                    $X->addr($offsetX),$incX,
+                    $Y->addr($offsetY),$incY,
+                    $Ap->addr($offsetAp));
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+    }
+
     public function gemm(
         int $order,
         int $transA,

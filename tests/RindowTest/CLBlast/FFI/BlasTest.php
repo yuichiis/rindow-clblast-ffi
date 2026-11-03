@@ -91,6 +91,24 @@ class BlasTest extends TestCase
         }
     }
 
+    public static function providerDtypes()
+    {
+        return [
+            'float32' => [[
+                'dtype' => NDArray::float32,
+            ]],
+            'float64' => [[
+                'dtype' => NDArray::float64,
+            ]],
+            'complex64' => [[
+                'dtype' => NDArray::complex64,
+            ]],
+            'complex128' => [[
+                'dtype' => NDArray::complex128,
+            ]],
+        ];
+    }
+
     //public static function providerDtypesFloats()
     //{
     //    return [
@@ -6183,6 +6201,781 @@ class BlasTest extends TestCase
             $bufferA,$offsetA=0,$ldA=$n,
             $bufferB,$offsetB=0,$ldB=$m,
             $queue,$events);
+    }
+
+    //
+    // Level 2 BLAS
+    //
+
+    #[DataProvider('providerDtypes')]
+    public function testGbmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $ocl = $this->getOpenCL();
+        $context = $this->newContextFromType($ocl);
+        $queue = $ocl->CommandQueue($context);
+        $events = $ocl->EventList();
+
+        $alpha = $this->isComplex($dtype) ? C(1.0) : 1.0;
+        $beta  = $this->isComplex($dtype) ? C(0.0) : 0.0;
+
+        $dense = [
+            [2,1,0],
+            [5,3,1],
+            [0,6,4],
+        ];
+        $x = [1,2,3];
+        $A = $this->ndarray($this->bandStorage($dense,1,1,BLAS::RowMajor),$dtype);
+
+        $X = $this->ndarray($x,$dtype);
+        $Y = $this->zeros([3],dtype:$dtype);
+        $blas->gbmv(
+            BLAS::RowMajor,BLAS::NoTrans,3,3,1,1,
+            $alpha,
+            $A->buffer(),$A->offset(),3,
+            $X->buffer(),$X->offset(),1,
+            $beta,
+            $Y->buffer(),$Y->offset(),1,
+            $queue,$events
+        );
+        $this->assertTrue($this->isclose($this->ndarray([4,14,24],$dtype),$Y));
+
+        $X = $this->ndarray($x,$dtype);
+        $Y = $this->zeros([3],dtype:$dtype);
+        $blas->gbmv(
+            BLAS::RowMajor,BLAS::Trans,3,3,1,1,
+            $alpha,
+            $A->buffer(),$A->offset(),3,
+            $X->buffer(),$X->offset(),1,
+            $beta,
+            $Y->buffer(),$Y->offset(),1,
+            $queue,$events
+        );
+        $this->assertTrue($this->isclose($this->ndarray([12,25,14],$dtype),$Y));
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testGbmvComplex($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $alpha = C(1.0);
+        $beta  = C(0.0);
+
+        $dense = [
+            [C(2,1),C(1),C(0)],
+            [C(1,-1),C(3,2),C(1)],
+            [C(0),C(2),C(4,-1)],
+        ];
+        $x = [C(1,1),C(2),C(1,-1)];
+        $A = $this->ndarray($this->bandStorage($dense,1,1,BLAS::RowMajor),$dtype);
+        $X = $this->ndarray($x,$dtype);
+        $Y = $this->zeros([3],dtype:$dtype);
+        $blas->gbmv(
+            BLAS::RowMajor,BLAS::NoTrans,3,3,1,1,
+            $alpha,
+            $A->buffer(),$A->offset(),3,
+            $X->buffer(),$X->offset(),1,
+            $beta,
+            $Y->buffer(),$Y->offset(),1
+        );
+        $expected = [C(3,3),C(9,3),C(7,-5)];
+        $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSbmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $dense = [
+            [2,1,0],
+            [1,3,1],
+            [0,1,4],
+        ];
+        $x = [1,2,3];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            [$kl,$ku] = ($uplo==BLAS::Upper) ? [0,1] : [1,0];
+            $A = $this->ndarray($this->bandStorage($dense,$kl,$ku,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->sbmv(
+                BLAS::RowMajor,$uplo,3,1,
+                1.0,
+                $A->buffer(),$A->offset(),2,
+                $X->buffer(),$X->offset(),1,
+                0.0,
+                $Y->buffer(),$Y->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSpmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $dense = [
+            [2,1,0],
+            [1,3,1],
+            [0,1,4],
+        ];
+        $x = [1,2,3];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->ndarray($this->packedStorage($dense,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->spmv(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $Ap->buffer(),$Ap->offset(),
+                $X->buffer(),$X->offset(),1,
+                0.0,
+                $Y->buffer(),$Y->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSymvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $A = $this->ndarray([
+            [2,1,0],
+            [1,3,1],
+            [0,1,4],
+        ],$dtype);
+        $x = [1,2,3];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->symv(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $A->buffer(),$A->offset(),3,
+                $X->buffer(),$X->offset(),1,
+                0.0,
+                $Y->buffer(),$Y->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray([4,10,14],$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHemvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $A = $this->ndarray([
+            [C(2),C(1,1),C(0)],
+            [C(1,-1),C(3),C(1,2)],
+            [C(0),C(1,-2),C(4)],
+        ],$dtype);
+        $x = [C(1),C(1),C(1)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->hemv(
+                BLAS::RowMajor,$uplo,3,
+                C(1.0),
+                $A->buffer(),$A->offset(),3,
+                $X->buffer(),$X->offset(),1,
+                C(0.0),
+                $Y->buffer(),$Y->offset(),1
+            );
+            $expected = [C(3,1),C(5,1),C(5,-2)];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHpmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $dense = [
+            [C(2),C(1,1),C(0)],
+            [C(1,-1),C(3),C(1,2)],
+            [C(0),C(1,-2),C(4)],
+        ];
+        $x = [C(1),C(1),C(1)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->ndarray($this->packedStorage($dense,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->hpmv(
+                BLAS::RowMajor,$uplo,3,
+                C(1.0),
+                $Ap->buffer(),$Ap->offset(),
+                $X->buffer(),$X->offset(),1,
+                C(0.0),
+                $Y->buffer(),$Y->offset(),1
+            );
+            $expected = [C(3,1),C(5,1),C(5,-2)];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHbmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $dense = [
+            [C(2),C(1,1),C(0)],
+            [C(1,-1),C(3),C(1,2)],
+            [C(0),C(1,-2),C(4)],
+        ];
+        $x = [C(1),C(1),C(1)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            [$kl,$ku] = ($uplo==BLAS::Upper) ? [0,1] : [1,0];
+            $A = $this->ndarray($this->bandStorage($dense,$kl,$ku,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->zeros([3],dtype:$dtype);
+            $blas->hbmv(
+                BLAS::RowMajor,$uplo,3,1,
+                C(1.0),
+                $A->buffer(),$A->offset(),2,
+                $X->buffer(),$X->offset(),1,
+                C(0.0),
+                $Y->buffer(),$Y->offset(),1
+            );
+            $expected = [C(3,1),C(5,1),C(5,-2)];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Y));
+        }
+    }
+
+    #[DataProvider('providerDtypes')]
+    public function testTrmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $upper = [
+            [2,1,3],
+            [0,4,1],
+            [0,0,5],
+        ];
+        $lower = [
+            [2,0,0],
+            [1,4,0],
+            [3,1,5],
+        ];
+        $cases = [
+            [BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,$upper,[13,11,15]],
+            [BLAS::Lower,BLAS::NoTrans,BLAS::NonUnit,$lower,[2,9,20]],
+            [BLAS::Upper,BLAS::Trans,BLAS::NonUnit,$upper,[2,9,20]],
+            [BLAS::Lower,BLAS::Trans,BLAS::NonUnit,$lower,[13,11,15]],
+            [BLAS::Upper,BLAS::NoTrans,BLAS::Unit,[[9,1,3],[9,9,1],[9,9,9]],[12,5,3]],
+        ];
+        foreach($cases as [$uplo,$trans,$diag,$dense,$expected]) {
+            $A = $this->ndarray($dense,$dtype);
+            $X = $this->ndarray([1,2,3],$dtype);
+            $blas->trmv(
+                BLAS::RowMajor,$uplo,$trans,$diag,3,
+                $A->buffer(),$A->offset(),3,
+                $X->buffer(),$X->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
+        }
+    }
+
+    #[DataProvider('providerDtypes')]
+    public function testTbmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $upper = [
+            [2,1,0],
+            [0,4,1],
+            [0,0,5],
+        ];
+        $lower = [
+            [2,0,0],
+            [1,4,0],
+            [0,1,5],
+        ];
+        $cases = [
+            [BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,$upper,[4,11,15]],
+            [BLAS::Lower,BLAS::NoTrans,BLAS::NonUnit,$lower,[2,9,17]],
+            [BLAS::Upper,BLAS::Trans,BLAS::NonUnit,$upper,[2,9,17]],
+            [BLAS::Lower,BLAS::Trans,BLAS::NonUnit,$lower,[4,11,15]],
+            [BLAS::Upper,BLAS::NoTrans,BLAS::Unit,[[9,1,0],[9,9,1],[9,9,9]],[3,5,3]],
+        ];
+        foreach($cases as [$uplo,$trans,$diag,$dense,$expected]) {
+            [$kl,$ku] = ($uplo==BLAS::Upper) ? [0,1] : [1,0];
+            $A = $this->ndarray($this->bandStorage($dense,$kl,$ku,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray([1,2,3],$dtype);
+            $blas->tbmv(
+                BLAS::RowMajor,$uplo,$trans,$diag,3,1,
+                $A->buffer(),$A->offset(),2,
+                $X->buffer(),$X->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
+        }
+    }
+
+    #[DataProvider('providerDtypes')]
+    public function testTpmvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $upper = [
+            [2,1,3],
+            [0,4,1],
+            [0,0,5],
+        ];
+        $lower = [
+            [2,0,0],
+            [1,4,0],
+            [3,1,5],
+        ];
+        $cases = [
+            [BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,$upper,[13,11,15]],
+            [BLAS::Lower,BLAS::NoTrans,BLAS::NonUnit,$lower,[2,9,20]],
+            [BLAS::Upper,BLAS::Trans,BLAS::NonUnit,$upper,[2,9,20]],
+            [BLAS::Lower,BLAS::Trans,BLAS::NonUnit,$lower,[13,11,15]],
+            [BLAS::Upper,BLAS::NoTrans,BLAS::Unit,[[9,1,3],[9,9,1],[9,9,9]],[12,5,3]],
+        ];
+        foreach($cases as [$uplo,$trans,$diag,$dense,$expected]) {
+            $Ap = $this->ndarray($this->packedStorage($dense,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray([1,2,3],$dtype);
+            $blas->tpmv(
+                BLAS::RowMajor,$uplo,$trans,$diag,3,
+                $Ap->buffer(),$Ap->offset(),
+                $X->buffer(),$X->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$X));
+        }
+    }
+
+    #[DataProvider('providerDtypes')]
+    public function testTbsvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $upper = [
+            [2,1,0],
+            [0,4,1],
+            [0,0,5],
+        ];
+        $lower = [
+            [2,0,0],
+            [1,4,0],
+            [0,1,5],
+        ];
+        $cases = [
+            [BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,$upper,[4,11,15]],
+            [BLAS::Lower,BLAS::NoTrans,BLAS::NonUnit,$lower,[2,9,17]],
+            [BLAS::Upper,BLAS::Trans,BLAS::NonUnit,$upper,[2,9,17]],
+            [BLAS::Lower,BLAS::Trans,BLAS::NonUnit,$lower,[4,11,15]],
+            [BLAS::Upper,BLAS::NoTrans,BLAS::Unit,[[9,1,0],[9,9,1],[9,9,9]],[3,5,3]],
+        ];
+        foreach($cases as [$uplo,$trans,$diag,$dense,$b]) {
+            [$kl,$ku] = ($uplo==BLAS::Upper) ? [0,1] : [1,0];
+            $A = $this->ndarray($this->bandStorage($dense,$kl,$ku,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($b,$dtype);
+            $blas->tbsv(
+                BLAS::RowMajor,$uplo,$trans,$diag,3,1,
+                $A->buffer(),$A->offset(),2,
+                $X->buffer(),$X->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray([1,2,3],$dtype),$X));
+        }
+    }
+
+    #[DataProvider('providerDtypes')]
+    public function testTpsvNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $upper = [
+            [2,1,0],
+            [0,4,1],
+            [0,0,5],
+        ];
+        $lower = [
+            [2,0,0],
+            [1,4,0],
+            [0,1,5],
+        ];
+        $cases = [
+            [BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,$upper,[4,11,15]],
+            [BLAS::Lower,BLAS::NoTrans,BLAS::NonUnit,$lower,[2,9,17]],
+            [BLAS::Upper,BLAS::Trans,BLAS::NonUnit,$upper,[2,9,17]],
+            [BLAS::Lower,BLAS::Trans,BLAS::NonUnit,$lower,[4,11,15]],
+            [BLAS::Upper,BLAS::NoTrans,BLAS::Unit,[[9,1,0],[9,9,1],[9,9,9]],[3,5,3]],
+        ];
+        foreach($cases as [$uplo,$trans,$diag,$dense,$b]) {
+            $Ap = $this->ndarray($this->packedStorage($dense,BLAS::RowMajor,$uplo),$dtype);
+            $X = $this->ndarray($b,$dtype);
+            $blas->tpsv(
+                BLAS::RowMajor,$uplo,$trans,$diag,3,
+                $Ap->buffer(),$Ap->offset(),
+                $X->buffer(),$X->offset(),1
+            );
+            $this->assertTrue($this->isclose($this->ndarray([1,2,3],$dtype),$X));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testGerNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [1,2,3];
+        $y = [4,5];
+        foreach([1.0,2.0] as $alpha) {
+            $A = $this->zeros([3,2],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->ndarray($y,$dtype);
+            $blas->ger(
+                BLAS::RowMajor,3,2,
+                $alpha,
+                $X->buffer(),$X->offset(),1,
+                $Y->buffer(),$Y->offset(),1,
+                $A->buffer(),$A->offset(),2
+            );
+            $expected = ($alpha==1.0) ?
+                [[4,5],[8,10],[12,15]] :
+                [[8,10],[16,20],[24,30]];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testGeruNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $A = $this->zeros([3,2],dtype:$dtype);
+        $X = $this->ndarray([C(1,1),C(2),C(3,-1)],$dtype);
+        $Y = $this->ndarray([C(2,-1),C(1,1)],$dtype);
+        $blas->geru(
+            BLAS::RowMajor,3,2,
+            C(1.0),
+            $X->buffer(),$X->offset(),1,
+            $Y->buffer(),$Y->offset(),1,
+            $A->buffer(),$A->offset(),2
+        );
+        $expected = [
+            [C(3,1),C(0,2)],
+            [C(4,-2),C(2,2)],
+            [C(5,-5),C(4,2)],
+        ];
+        $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testGercNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $A = $this->zeros([3,2],dtype:$dtype);
+        $X = $this->ndarray([C(1,1),C(2),C(3,-1)],$dtype);
+        $Y = $this->ndarray([C(2,-1),C(1,1)],$dtype);
+        $blas->gerc(
+            BLAS::RowMajor,3,2,
+            C(1.0),
+            $X->buffer(),$X->offset(),1,
+            $Y->buffer(),$Y->offset(),1,
+            $A->buffer(),$A->offset(),2
+        );
+        $expected = [
+            [C(1,3),C(2)],
+            [C(4,2),C(2,-2)],
+            [C(7,1),C(2,-4)],
+        ];
+        $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSyrNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [1,2,3];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $A = $this->zeros([3,3],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $blas->syr(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $A->buffer(),$A->offset(),3
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [[1,2,3],[0,4,6],[0,0,9]] :
+                [[1,0,0],[2,4,0],[3,6,9]];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSprNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [1,2,3];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->zeros([6],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $blas->spr(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $Ap->buffer(),$Ap->offset()
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [1,2,3,4,6,9] :
+                [1,2,4,3,6,9];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Ap));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSyr2Normal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [1,2,3];
+        $y = [4,5,6];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $A = $this->zeros([3,3],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->ndarray($y,$dtype);
+            $blas->syr2(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $Y->buffer(),$Y->offset(),1,
+                $A->buffer(),$A->offset(),3
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [[8,13,18],[0,20,27],[0,0,36]] :
+                [[8,0,0],[13,20,0],[18,27,36]];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+        }
+    }
+
+    #[DataProvider('providerDtypesFloats')]
+    public function testSpr2Normal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [1,2,3];
+        $y = [4,5,6];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->zeros([6],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->ndarray($y,$dtype);
+            $blas->spr2(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $Y->buffer(),$Y->offset(),1,
+                $Ap->buffer(),$Ap->offset()
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [8,13,18,20,27,36] :
+                [8,13,20,18,27,36];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Ap));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHerNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [C(1,1),C(2),C(3,-1)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $A = $this->zeros([3,3],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $blas->her(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $A->buffer(),$A->offset(),3
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [[C(2),C(2,2),C(2,4)],[C(0),C(4),C(6,2)],[C(0),C(0),C(10)]] :
+                [[C(2),C(0),C(0)],[C(2,-2),C(4),C(0)],[C(2,-4),C(6,-2),C(10)]];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHprNormal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [C(1,1),C(2),C(3,-1)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->zeros([6],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $blas->hpr(
+                BLAS::RowMajor,$uplo,3,
+                1.0,
+                $X->buffer(),$X->offset(),1,
+                $Ap->buffer(),$Ap->offset()
+            );
+            //echo 'uplo:'.(($uplo==BLAS::Upper)?'Upper':'Lower')."\n";
+            //echo $this->arrayToString($Ap)."\n";
+            $expected = ($uplo==BLAS::Upper) ?
+                [C(2),C(2,2),C(2,4),C(4),C(6,2),C(10)] :
+                [C(2),C(2,-2),C(4),C(2,-4),C(6,-2),C(10)];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Ap));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHer2Normal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [C(1,1),C(2),C(3,-1)];
+        $y = [C(2,-1),C(1,1),C(4)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $A = $this->zeros([3,3],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->ndarray($y,$dtype);
+            $blas->her2(
+                BLAS::RowMajor,$uplo,3,
+                C(1.0),
+                $X->buffer(),$X->offset(),1,
+                $Y->buffer(),$Y->offset(),1,
+                $A->buffer(),$A->offset(),3
+            );
+            $expected = ($uplo==BLAS::Upper) ?
+                [[C(2),C(6,-2),C(11,3)],[C(0),C(4),C(10,4)],[C(0),C(0),C(24)]] :
+                [[C(2),C(0),C(0)],[C(6,2),C(4),C(0)],[C(11,-3),C(10,-4),C(24)]];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$A));
+        }
+    }
+
+    #[DataProvider('providerDtypesComplexes')]
+    public function testHpr2Normal($params)
+    {
+        extract($params);
+        $blas = $this->getBlas();
+        $x = [C(1,1),C(2),C(3,-1)];
+        $y = [C(2,-1),C(1,1),C(4)];
+        foreach([BLAS::Upper,BLAS::Lower] as $uplo) {
+            $Ap = $this->zeros([6],dtype:$dtype);
+            $X = $this->ndarray($x,$dtype);
+            $Y = $this->ndarray($y,$dtype);
+            $blas->hpr2(
+                BLAS::RowMajor,$uplo,3,
+                C(1.0),
+                $X->buffer(),$X->offset(),1,
+                $Y->buffer(),$Y->offset(),1,
+                $Ap->buffer(),$Ap->offset()
+            );
+            //echo 'uplo:'.(($uplo==BLAS::Upper)?'Upper':'Lower')."\n";
+            //echo $this->arrayToString($Ap)."\n";
+            $expected = ($uplo==BLAS::Upper) ?
+                [C(2),C(6,-2),C(11,3),C(4),C(10,4),C(24)] :
+                [C(2),C(6,2),C(4),C(11,-3),C(10,-4),C(24)];
+            $this->assertTrue($this->isclose($this->ndarray($expected,$dtype),$Ap));
+        }
+    }
+
+    public function testGbmvMinusKl()
+    {
+        $blas = $this->getBlas();
+        $A = $this->array([1,2,3,4],dtype:NDArray::float32);
+        $X = $this->array([1,2],dtype:NDArray::float32);
+        $Y = $this->array([0,0],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->gbmv(
+            BLAS::RowMajor,BLAS::NoTrans,2,2,-1,0,
+            1.0,
+            $A->buffer(),$A->offset(),2,
+            $X->buffer(),$X->offset(),1,
+            0.0,
+            $Y->buffer(),$Y->offset(),1
+        );
+    }
+
+    public function testGbmvIllegalBufferA()
+    {
+        $blas = $this->getBlas();
+        $A = $this->array([1,2,3],dtype:NDArray::float32);
+        $X = $this->array([1,2],dtype:NDArray::float32);
+        $Y = $this->array([0,0],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->gbmv(
+            BLAS::RowMajor,BLAS::NoTrans,2,2,1,1,
+            1.0,
+            $A->buffer(),$A->offset(),3,
+            $X->buffer(),$X->offset(),1,
+            0.0,
+            $Y->buffer(),$Y->offset(),1
+        );
+    }
+
+    public function testSymvMinusN()
+    {
+        $blas = $this->getBlas();
+        $A = $this->array([1],dtype:NDArray::float32);
+        $X = $this->array([1],dtype:NDArray::float32);
+        $Y = $this->array([0],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->symv(
+            BLAS::RowMajor,BLAS::Upper,0,
+            1.0,
+            $A->buffer(),$A->offset(),1,
+            $X->buffer(),$X->offset(),1,
+            0.0,
+            $Y->buffer(),$Y->offset(),1
+        );
+    }
+
+    public function testTrmvMinusLdA()
+    {
+        $blas = $this->getBlas();
+        $A = $this->array([1,2,3,4],dtype:NDArray::float32);
+        $X = $this->array([1,2],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->trmv(
+            BLAS::RowMajor,BLAS::Upper,BLAS::NoTrans,BLAS::NonUnit,2,
+            $A->buffer(),$A->offset(),0,
+            $X->buffer(),$X->offset(),1
+        );
+    }
+
+    public function testSprOverflowBufferAp()
+    {
+        $blas = $this->getBlas();
+        $X = $this->array([1,2,3],dtype:NDArray::float32);
+        $Ap = $this->array([1,2,3,4,5],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->spr(
+            BLAS::RowMajor,BLAS::Upper,3,
+            1.0,
+            $X->buffer(),$X->offset(),1,
+            $Ap->buffer(),$Ap->offset()
+        );
+    }
+
+    public function testGerIllegalBufferA()
+    {
+        $blas = $this->getBlas();
+        $X = $this->array([1,2,3],dtype:NDArray::float32);
+        $Y = $this->array([1,2],dtype:NDArray::float32);
+        $A = $this->array([1,2,3,4,5],dtype:NDArray::float32);
+        $this->expectException(InvalidArgumentException::class);
+        $blas->ger(
+            BLAS::RowMajor,3,2,
+            1.0,
+            $X->buffer(),$X->offset(),1,
+            $Y->buffer(),$Y->offset(),1,
+            $A->buffer(),$A->offset(),2
+        );
     }
 
 }
