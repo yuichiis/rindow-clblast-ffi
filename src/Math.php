@@ -765,8 +765,8 @@ class Math
                 break;
             }
             case NDArray::complex64:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastCgemmStridedBatched(
                     $order,
                     $transA,
@@ -783,8 +783,8 @@ class Math
                 break;
             }
             case NDArray::complex128:{
-                $alpha = $this->toComplex($alpha,$A->dtype());
-                $beta = $this->toComplex($beta,$A->dtype());
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
                 $status = $alt->CLBlastZgemmStridedBatched(
                     $order,
                     $transA,
