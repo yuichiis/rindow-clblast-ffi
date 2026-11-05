@@ -437,7 +437,7 @@ CLBlastStatusCode RindowCLBlastZhpmv(const CLBlastLayout layout, const CLBlastTr
     }
     return (CLBlastStatusCode)status;
 }
-
+/*
 CLBlastStatusCode RindowCLBlastCtrsv(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose, const CLBlastDiagonal diagonal,
                                           const size_t n,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
@@ -494,7 +494,7 @@ CLBlastStatusCode RindowCLBlastZtrsv(const CLBlastLayout layout, const CLBlastTr
     }
     return (CLBlastStatusCode)status;
 }
-
+*/
 CLBlastStatusCode RindowCLBlastCgeru(const CLBlastLayout layout,
                                           const size_t m, const size_t n,
                                           const rindow_float2 *alpha,
