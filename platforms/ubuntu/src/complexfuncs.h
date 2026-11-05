@@ -14,12 +14,12 @@ typedef uint16_t                    cl_half;
 typedef float                       cl_float;
 typedef double                      cl_double;
 
-typedef union _cl_float2 {
-    cl_float   s[2];
-} cl_float2;
-typedef union _cl_double2 {
-    cl_double   s[2];
-} cl_double2;
+//typedef union _cl_float2 {
+//    cl_float   s[2];
+//} cl_float2;
+//typedef union _cl_double2 {
+//    cl_double   s[2];
+//} cl_double2;
 //typedef enum CLBlastStatusCode_ {
 //  CLBlastSuccess                   =   0, // CL_SUCCESS
 //} CLBlastStatusCode;

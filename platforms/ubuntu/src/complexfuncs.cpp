@@ -7,8 +7,15 @@
 #include <iostream>
 
 extern "C" {
+typedef struct _rindow_float2 {
+    float s[2];
+} rindow_float2;
+typedef struct _rindow_double2 {
+    double s[2];
+} rindow_dobule2;
+
 CLBlastStatusCode RindowCLBlastCscal(const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
                                           cl_command_queue* queue, cl_event* event) noexcept
 {
@@ -32,7 +39,7 @@ CLBlastStatusCode RindowCLBlastCscal(const size_t n,
 }
 
 CLBlastStatusCode RindowCLBlastZscal(const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
                                           cl_command_queue* queue, cl_event* event) noexcept
 {
@@ -56,7 +63,7 @@ CLBlastStatusCode RindowCLBlastZscal(const size_t n,
 }
 
 CLBlastStatusCode RindowCLBlastCaxpy(const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
                                           cl_mem y_buffer, const size_t y_offset, const size_t y_inc,
                                           cl_command_queue* queue, cl_event* event)
@@ -81,7 +88,7 @@ CLBlastStatusCode RindowCLBlastCaxpy(const size_t n,
     return (CLBlastStatusCode)status;
 }
 CLBlastStatusCode RindowCLBlastZaxpy(const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
                                           cl_mem y_buffer, const size_t y_offset, const size_t y_inc,
                                           cl_command_queue* queue, cl_event* event)
@@ -108,10 +115,10 @@ CLBlastStatusCode RindowCLBlastZaxpy(const size_t n,
 
 CLBlastStatusCode RindowCLBlastCgemv(const CLBlastLayout layout, const CLBlastTranspose a_transpose,
                                           const size_t m, const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
-                                          const cl_float2 *beta,
+                                          const rindow_float2 *beta,
                                           cl_mem y_buffer, const size_t y_offset, const size_t y_inc,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -140,10 +147,10 @@ CLBlastStatusCode RindowCLBlastCgemv(const CLBlastLayout layout, const CLBlastTr
 }
 CLBlastStatusCode RindowCLBlastZgemv(const CLBlastLayout layout, const CLBlastTranspose a_transpose,
                                           const size_t m, const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem x_buffer, const size_t x_offset, const size_t x_inc,
-                                          const cl_double2 *beta,
+                                          const rindow_double2 *beta,
                                           cl_mem y_buffer, const size_t y_offset, const size_t y_inc,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -173,10 +180,10 @@ CLBlastStatusCode RindowCLBlastZgemv(const CLBlastLayout layout, const CLBlastTr
 
 CLBlastStatusCode RindowCLBlastCgemm(const CLBlastLayout layout, const CLBlastTranspose a_transpose, const CLBlastTranspose b_transpose,
                                           const size_t m, const size_t n, const size_t k,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                          const cl_float2 *beta,
+                                          const rindow_float2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -207,10 +214,10 @@ CLBlastStatusCode RindowCLBlastCgemm(const CLBlastLayout layout, const CLBlastTr
 
 CLBlastStatusCode RindowCLBlastZgemm(const CLBlastLayout layout, const CLBlastTranspose a_transpose, const CLBlastTranspose b_transpose,
                                           const size_t m, const size_t n, const size_t k,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                          const cl_double2 *beta,
+                                          const rindow_double2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -241,10 +248,10 @@ CLBlastStatusCode RindowCLBlastZgemm(const CLBlastLayout layout, const CLBlastTr
 
 CLBlastStatusCode RindowCLBlastCsymm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle,
                                           const size_t m, const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                          const cl_float2 *beta,
+                                          const rindow_float2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -274,10 +281,10 @@ CLBlastStatusCode RindowCLBlastCsymm(const CLBlastLayout layout, const CLBlastSi
 }
 CLBlastStatusCode RindowCLBlastZsymm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle,
                                           const size_t m, const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                          const cl_double2 *beta,
+                                          const rindow_double2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -307,9 +314,9 @@ CLBlastStatusCode RindowCLBlastZsymm(const CLBlastLayout layout, const CLBlastSi
 }
 CLBlastStatusCode RindowCLBlastCsyrk(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose,
                                           const size_t n, const size_t k,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
-                                          const cl_float2 *beta,
+                                          const rindow_float2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -338,9 +345,9 @@ CLBlastStatusCode RindowCLBlastCsyrk(const CLBlastLayout layout, const CLBlastTr
 }
 CLBlastStatusCode RindowCLBlastZsyrk(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose,
                                           const size_t n, const size_t k,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
-                                          const cl_double2 *beta,
+                                          const rindow_double2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                           cl_command_queue* queue, cl_event* event)
 {
@@ -370,10 +377,10 @@ CLBlastStatusCode RindowCLBlastZsyrk(const CLBlastLayout layout, const CLBlastTr
 
 CLBlastStatusCode RindowCLBlastCsyr2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
                                            const size_t n, const size_t k,
-                                           const cl_float2 *alpha,
+                                           const rindow_float2 *alpha,
                                            const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                            const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                           const cl_float2 *beta,
+                                           const rindow_float2 *beta,
                                            cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                            cl_command_queue* queue, cl_event* event)
 {
@@ -403,10 +410,10 @@ CLBlastStatusCode RindowCLBlastCsyr2k(const CLBlastLayout layout, const CLBlastT
 }
 CLBlastStatusCode RindowCLBlastZsyr2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
                                            const size_t n, const size_t k,
-                                           const cl_double2 *alpha,
+                                           const rindow_double2 *alpha,
                                            const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                            const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
-                                           const cl_double2 *beta,
+                                           const rindow_double2 *beta,
                                            cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
                                            cl_command_queue* queue, cl_event* event)
 {
@@ -436,7 +443,7 @@ CLBlastStatusCode RindowCLBlastZsyr2k(const CLBlastLayout layout, const CLBlastT
 }
 CLBlastStatusCode RindowCLBlastCtrmm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose, const CLBlastDiagonal diagonal,
                                           const size_t m, const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                           cl_command_queue* queue, cl_event* event)
@@ -467,7 +474,7 @@ CLBlastStatusCode RindowCLBlastCtrmm(const CLBlastLayout layout, const CLBlastSi
 }
 CLBlastStatusCode RindowCLBlastZtrmm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose, const CLBlastDiagonal diagonal,
                                           const size_t m, const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                           cl_command_queue* queue, cl_event* event)
@@ -499,7 +506,7 @@ CLBlastStatusCode RindowCLBlastZtrmm(const CLBlastLayout layout, const CLBlastSi
 
 CLBlastStatusCode RindowCLBlastCtrsm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose, const CLBlastDiagonal diagonal,
                                           const size_t m, const size_t n,
-                                          const cl_float2 *alpha,
+                                          const rindow_float2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                           cl_command_queue* queue, cl_event* event)
@@ -530,7 +537,7 @@ CLBlastStatusCode RindowCLBlastCtrsm(const CLBlastLayout layout, const CLBlastSi
 }
 CLBlastStatusCode RindowCLBlastZtrsm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose, const CLBlastDiagonal diagonal,
                                           const size_t m, const size_t n,
-                                          const cl_double2 *alpha,
+                                          const rindow_double2 *alpha,
                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                           cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                           cl_command_queue* queue, cl_event* event)
@@ -562,7 +569,7 @@ CLBlastStatusCode RindowCLBlastZtrsm(const CLBlastLayout layout, const CLBlastSi
 
 CLBlastStatusCode RindowCLBlastComatcopy(const CLBlastLayout layout, const CLBlastTranspose a_transpose,
                                               const size_t m, const size_t n,
-                                              const cl_float2 *alpha,
+                                              const rindow_float2 *alpha,
                                               const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                               cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                               cl_command_queue* queue, cl_event* event)
@@ -591,7 +598,7 @@ CLBlastStatusCode RindowCLBlastComatcopy(const CLBlastLayout layout, const CLBla
 
 CLBlastStatusCode RindowCLBlastZomatcopy(const CLBlastLayout layout, const CLBlastTranspose a_transpose,
                                               const size_t m, const size_t n,
-                                              const cl_double2 *alpha,
+                                              const rindow_double2 *alpha,
                                               const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
                                               cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                               cl_command_queue* queue, cl_event* event)
@@ -619,10 +626,10 @@ CLBlastStatusCode RindowCLBlastZomatcopy(const CLBlastLayout layout, const CLBla
 }
 CLBlastStatusCode RindowCLBlastCgemmStridedBatched(const CLBlastLayout layout, const CLBlastTranspose a_transpose, const CLBlastTranspose b_transpose,
                                                         const size_t m, const size_t n, const size_t k,
-                                                        const cl_float2 *alpha,
+                                                        const rindow_float2 *alpha,
                                                         const cl_mem a_buffer, const size_t a_offset, const size_t a_ld, const size_t a_stride,
                                                         const cl_mem b_buffer, const size_t b_offset, const size_t b_ld, const size_t b_stride,
-                                                        const cl_float2 *beta,
+                                                        const rindow_float2 *beta,
                                                         cl_mem c_buffer, const size_t c_offset, const size_t c_ld, const size_t c_stride,
                                                         const size_t batch_count,
                                                         cl_command_queue* queue, cl_event* event)
@@ -654,10 +661,10 @@ CLBlastStatusCode RindowCLBlastCgemmStridedBatched(const CLBlastLayout layout, c
 }
 CLBlastStatusCode RindowCLBlastZgemmStridedBatched(const CLBlastLayout layout, const CLBlastTranspose a_transpose, const CLBlastTranspose b_transpose,
                                                         const size_t m, const size_t n, const size_t k,
-                                                        const cl_double2 *alpha,
+                                                        const rindow_double2 *alpha,
                                                         const cl_mem a_buffer, const size_t a_offset, const size_t a_ld, const size_t a_stride,
                                                         const cl_mem b_buffer, const size_t b_offset, const size_t b_ld, const size_t b_stride,
-                                                        const cl_double2 *beta,
+                                                        const rindow_double2 *beta,
                                                         cl_mem c_buffer, const size_t c_offset, const size_t c_ld, const size_t c_stride,
                                                         const size_t batch_count,
                                                         cl_command_queue* queue, cl_event* event)
