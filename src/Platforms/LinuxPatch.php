@@ -575,8 +575,6 @@ class LinuxPatch
     }
 
     /**
-     * 
-     */
     public function CLBlastCtrsv(
         int $layout,        // const CLBlastLayout layout,
         int $triangle,      // const CLBlastTriangle triangle,
@@ -609,9 +607,7 @@ class LinuxPatch
             $event          // cl_event* event
         );
     }
-    /**
-     * 
-     */
+
     public function CLBlastZtrsv(
         int $layout,        // const CLBlastLayout layout,
         int $triangle,      // const CLBlastTriangle triangle,
@@ -644,7 +640,7 @@ class LinuxPatch
             $event          // cl_event* event
         );
     }
-
+*/
     /**
      * 
      */

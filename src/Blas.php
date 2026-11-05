@@ -1144,7 +1144,6 @@ class Blas
     ) : void
     {
         $ffi = $this->ffi;
-        $alt = $this->alt;
 
         // Check transA code
         if($trans!==BLASIF::NoTrans && $trans!==BLASIF::ConjNoTrans &&
@@ -1190,7 +1189,7 @@ class Blas
                 break;
             }
             case NDArray::complex64:{
-                $status = $alt->CLBlastCtrsv(
+                $status = $ffi->CLBlastCtrsv(
                     $order, $uplo, $trans, $diag,
                     $n,
                     $bufferA_p,$offsetA,$ldA,
@@ -1200,7 +1199,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $status = $alt->CLBlastZtrsv(
+                $status = $ffi->CLBlastZtrsv(
                     $order, $uplo, $trans, $diag,
                     $n,
                     $bufferA_p,$offsetA,$ldA,
