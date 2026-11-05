@@ -1238,6 +1238,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_shape_parameter("m", $m);
@@ -1308,7 +1309,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastCgbmv(
+                $status = $alt->CLBlastCgbmv(
                     $order, $trans,
                     $m, $n, $kl, $ku,
                     $alpha,
@@ -1323,7 +1324,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastZgbmv(
+                $status = $alt->CLBlastZgbmv(
                     $order, $trans,
                     $m, $n, $kl, $ku,
                     $alpha,
@@ -1591,6 +1592,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_uplo_parameter('uplo', $uplo);
@@ -1618,7 +1620,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastChemv(
+                $status = $alt->CLBlastChemv(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -1633,7 +1635,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastZhemv(
+                $status = $alt->CLBlastZhemv(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -1671,6 +1673,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_uplo_parameter('uplo', $uplo);
@@ -1698,7 +1701,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastChpmv(
+                $status = $alt->CLBlastChpmv(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -1713,7 +1716,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastZhpmv(
+                $status = $alt->CLBlastZhpmv(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -1752,6 +1755,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_uplo_parameter('uplo', $uplo);
@@ -1780,7 +1784,7 @@ class Blas
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastChbmv(
+                $status = $alt->CLBlastChbmv(
                     $order, $uplo,
                     $n, $k,
                     $alpha,
@@ -1795,7 +1799,7 @@ class Blas
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
                 $beta = $this->toComplex($beta,$dtype,'beta');
-                $status = $ffi->CLBlastZhbmv(
+                $status = $alt->CLBlastZhbmv(
                     $order, $uplo,
                     $n, $k,
                     $alpha,
@@ -2360,6 +2364,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_shape_parameter("m", $m);
@@ -2386,7 +2391,7 @@ class Blas
         switch($dtype) {
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastCgeru(
+                $status = $alt->CLBlastCgeru(
                     $order,
                     $m, $n,
                     $alpha,
@@ -2399,7 +2404,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastZgeru(
+                $status = $alt->CLBlastZgeru(
                     $order,
                     $m, $n,
                     $alpha,
@@ -2435,6 +2440,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_shape_parameter("m", $m);
@@ -2461,7 +2467,7 @@ class Blas
         switch($dtype) {
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastCgerc(
+                $status = $alt->CLBlastCgerc(
                     $order,
                     $m, $n,
                     $alpha,
@@ -2474,7 +2480,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastZgerc(
+                $status = $alt->CLBlastZgerc(
                     $order,
                     $m, $n,
                     $alpha,
@@ -2934,6 +2940,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_uplo_parameter('uplo', $uplo);
@@ -2960,7 +2967,7 @@ class Blas
         switch($dtype) {
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastCher2(
+                $status = $alt->CLBlastCher2(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -2973,7 +2980,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastZher2(
+                $status = $alt->CLBlastZher2(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -3009,6 +3016,7 @@ class Blas
     ) : void
     {
         $ffi= $this->ffi;
+        $alt = $this->alt;
 
         $this->assert_order_parameter('order', $order);
         $this->assert_uplo_parameter('uplo', $uplo);
@@ -3035,7 +3043,7 @@ class Blas
         switch($dtype) {
             case NDArray::complex64:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastChpr2(
+                $status = $alt->CLBlastChpr2(
                     $order, $uplo,
                     $n,
                     $alpha,
@@ -3048,7 +3056,7 @@ class Blas
             }
             case NDArray::complex128:{
                 $alpha = $this->toComplex($alpha,$dtype,'alpha');
-                $status = $ffi->CLBlastZhpr2(
+                $status = $alt->CLBlastZhpr2(
                     $order, $uplo,
                     $n,
                     $alpha,
