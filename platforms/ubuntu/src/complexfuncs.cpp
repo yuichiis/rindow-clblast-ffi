@@ -12,7 +12,7 @@ typedef struct _rindow_float2 {
 } rindow_float2;
 typedef struct _rindow_double2 {
     double s[2];
-} rindow_dobule2;
+} rindow_double2;
 
 CLBlastStatusCode RindowCLBlastCscal(const size_t n,
                                           const rindow_float2 *alpha,
