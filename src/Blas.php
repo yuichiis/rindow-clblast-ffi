@@ -3308,6 +3308,106 @@ class Blas
         }
     }
 
+    public function hemm(
+        int $order,
+        int $side,
+        int $uplo,
+        int $m,
+        int $n,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $B, int $offsetB, int $ldB,
+        float|object $beta,
+        DeviceBuffer $C, int $offsetC, int $ldC,
+        CommandQueue $queue,
+        ?EventList $event=null,
+        ) : void
+    {
+        $ffi= $this->ffi;
+        $alt= $this->alt;
+
+        $this->assert_shape_parameter("m", $m);
+        $this->assert_shape_parameter("n", $n);
+
+        // Check Buffer A
+        if($side==BLASIF::Left) {
+            $rows = $m;
+        } elseif($side==BLASIF::Right) {
+            $rows = $n;
+        } else {
+            throw new InvalidArgumentException('unknown side mode for bufferA.');
+        }
+        $this->assert_matrix_buffer_spec("A", $A, $rows, $rows, $offsetA, $ldA);
+
+        // Check Buffer B
+        $this->assert_matrix_buffer_spec("B", $B, $m, $n, $offsetB, $ldB);
+
+        // Check Buffer C
+        $this->assert_matrix_buffer_spec("C", $C, $m, $n, $offsetC, $ldC);
+
+        // Check Buffer A and B and C
+        $dtype = $A->dtype();
+        if($dtype!=$B->dtype() || $dtype!=$C->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and B and C");
+        }
+
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
+        $bufferC_p = $ffi->cast("cl_mem",$C->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');  // *** CAUTION ***
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
+                $status = $alt->CLBlastChemm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');  // *** CAUTION ***
+                $beta = $this->toComplex($beta,$A->dtype(),'beta');
+                $status = $alt->CLBlastZhemm(
+                    $order,
+                    $side,
+                    $uplo,
+                    $m,$n,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?hemm error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+    
     public function syrk(
         int $order,
         int $uplo,
@@ -3404,6 +3504,93 @@ class Blas
         }
         if($status!=self::CLBlastSuccess) {
             throw new RuntimeException("CLBlast?syrk error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
+    public function herk(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $n,
+        int $k,
+        float $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        float $beta,
+        DeviceBuffer $C, int $offsetC, int $ldC,
+        CommandQueue $queue,
+        ?EventList $event=null,
+        ) : void
+    {
+        $ffi= $this->ffi;
+        $alt= $this->alt;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_shape_parameter("k", $k);
+
+        if($trans==BLASIF::NoTrans || $trans==BLASIF::ConjNoTrans) {
+            $rows = $n; $cols = $k;
+        } else if($trans==BLASIF::Trans || $trans==BLASIF::ConjTrans) {
+            $rows = $k; $cols = $n;
+        } else {
+            throw new InvalidArgumentException("unknown transpose mode for bufferA.");
+        }
+        $this->assert_matrix_buffer_spec("A", $A, $rows, $cols, $offsetA, $ldA);
+
+        // Check Buffer C
+        $this->assert_matrix_buffer_spec("C", $C, $n, $n, $offsetC, $ldC);
+
+        // Check Buffer A and C
+        $dtype = $A->dtype();
+        if($dtype!=$C->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and C");
+        }
+
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferC_p = $ffi->cast("cl_mem",$C->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+        switch($dtype) {
+            case NDArray::complex64:{
+                $status = $alt->CLBlastCherk(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $status = $alt->CLBlastZherk(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?herk error=$status", $status);
         }
         if($event) {
             $event->_move($event_obj);
@@ -3515,6 +3702,101 @@ class Blas
         }
         if($status!=self::CLBlastSuccess) {
             throw new RuntimeException("CLBlast?syr2k error=$status", $status);
+        }
+        if($event) {
+            $event->_move($event_obj);
+        }
+    }
+
+    public function her2k(
+        int $order,
+        int $uplo,
+        int $trans,
+        int $n,
+        int $k,
+        float|object $alpha,
+        DeviceBuffer $A, int $offsetA, int $ldA,
+        DeviceBuffer $B, int $offsetB, int $ldB,
+        float $beta,
+        DeviceBuffer $C, int $offsetC, int $ldC,
+        CommandQueue $queue,
+        ?EventList $event=null,
+    ) : void
+    {
+        $ffi= $this->ffi;
+        $alt= $this->alt;
+
+        $this->assert_shape_parameter("n", $n);
+        $this->assert_shape_parameter("k", $k);
+
+        // Check Buffer A and B
+        if($trans==BLASIF::NoTrans || $trans==BLASIF::ConjNoTrans) {
+            $rows = $n; $cols = $k;
+        } else if($trans==BLASIF::Trans || $trans==BLASIF::ConjTrans) {
+            $rows = $k; $cols = $n;
+        } else {
+            throw new InvalidArgumentException('unknown transpose mode for bufferA.');
+        }
+        $this->assert_matrix_buffer_spec("A", $A, $rows, $cols, $offsetA, $ldA);
+        $this->assert_matrix_buffer_spec("B", $B, $rows, $cols, $offsetB, $ldB);
+
+        // Check Buffer C
+        $this->assert_matrix_buffer_spec("C", $C, $n, $n, $offsetC, $ldC);
+
+        // Check Buffer A and B and C
+        $dtype = $A->dtype();
+        if($dtype!=$B->dtype() || $dtype!=$C->dtype()) {
+            throw new InvalidArgumentException("Unmatch data type for A and B and C");
+        }
+
+        $bufferA_p = $ffi->cast("cl_mem",$A->_getId());
+        $bufferB_p = $ffi->cast("cl_mem",$B->_getId());
+        $bufferC_p = $ffi->cast("cl_mem",$C->_getId());
+        $queue_p = $ffi->cast("cl_command_queue*",FFI::addr($queue->_getId()));
+        $event_p = null;
+        if($event) {
+            $event_obj = $event->_ffi()->new("cl_event[1]");
+            $event_p = $ffi->cast("cl_event[1]",$event_obj);
+        }
+        switch($dtype) {
+            case NDArray::complex64:{
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');  // *** CAUTION ***
+                $status = $alt->CLBlastCher2k(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            case NDArray::complex128:{
+                $alpha = $this->toComplex($alpha,$A->dtype(),'alpha');  // *** CAUTION ***
+                $status = $alt->CLBlastZher2k(
+                    $order,
+                    $uplo,
+                    $trans,
+                    $n,$k,
+                    $alpha,
+                    $bufferA_p,$offsetA,$ldA,
+                    $bufferB_p,$offsetB,$ldB,
+                    $beta,
+                    $bufferC_p,$offsetC,$ldC,
+                    $queue_p,$event_p
+                );
+                break;
+            }
+            default: {
+                throw new InvalidArgumentException('Unsuppored data type');
+            }
+        }
+        if($status!=self::CLBlastSuccess) {
+            throw new RuntimeException("CLBlast?her2k error=$status", $status);
         }
         if($event) {
             $event->_move($event_obj);
