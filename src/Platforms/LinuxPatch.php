@@ -1390,7 +1390,6 @@ class LinuxPatch
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
-        $beta  = FFI::addr($beta);
         return $this->ffi->RindowCLBlastCher2k(
             $layout,    // const CLBlastLayout layout,
             $triangle,  // const CLBlastTriangle triangle,
@@ -1438,7 +1437,6 @@ class LinuxPatch
         ) : int         // CLBlastStatusCode 
     {
         $alpha = FFI::addr($alpha);
-        $beta  = FFI::addr($beta);
         return $this->ffi->RindowCLBlastZher2k(
             $layout,    // const CLBlastLayout layout,
             $triangle,  // const CLBlastTriangle triangle,
