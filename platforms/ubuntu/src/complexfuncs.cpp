@@ -876,7 +876,7 @@ CLBlastStatusCode RindowCLBlastChemm(const CLBlastLayout layout, const CLBlastSi
                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
                                           const cl_float2 *beta,
                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
-                                          cl_command_queue* queue, cl_event* event);
+                                          cl_command_queue* queue, cl_event* event)
 {
     clblast::StatusCode status;
     try {
