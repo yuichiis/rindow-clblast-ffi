@@ -3525,7 +3525,6 @@ class Blas
         ) : void
     {
         $ffi= $this->ffi;
-        $alt= $this->alt;
 
         $this->assert_shape_parameter("n", $n);
         $this->assert_shape_parameter("k", $k);
@@ -3558,7 +3557,7 @@ class Blas
         }
         switch($dtype) {
             case NDArray::complex64:{
-                $status = $alt->CLBlastCherk(
+                $status = $ffi->CLBlastCherk(
                     $order,
                     $uplo,
                     $trans,
@@ -3572,7 +3571,7 @@ class Blas
                 break;
             }
             case NDArray::complex128:{
-                $status = $alt->CLBlastZherk(
+                $status = $ffi->CLBlastZherk(
                     $order,
                     $uplo,
                     $trans,
