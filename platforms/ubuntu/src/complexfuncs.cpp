@@ -1066,7 +1066,7 @@ CLBlastStatusCode RindowCLBlastZsyr2k(const CLBlastLayout layout, const CLBlastT
     }
     return (CLBlastStatusCode)status;
 }
-CLBlastStatusCode RindowCLBlastCHer2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
+CLBlastStatusCode RindowCLBlastCher2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
                                            const size_t n, const size_t k,
                                            const rindow_float2 *alpha,
                                            const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
