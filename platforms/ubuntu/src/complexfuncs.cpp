@@ -869,6 +869,74 @@ CLBlastStatusCode RindowCLBlastZsymm(const CLBlastLayout layout, const CLBlastSi
     }
     return (CLBlastStatusCode)status;
 }
+CLBlastStatusCode RindowCLBlastChemm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle,
+                                          const size_t m, const size_t n,
+                                          const cl_float2 *alpha,
+                                          const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
+                                          const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
+                                          const cl_float2 *beta,
+                                          cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
+                                          cl_command_queue* queue, cl_event* event);
+{
+    clblast::StatusCode status;
+    try {
+        status = clblast::Hemm(
+            static_cast<clblast::Layout>(layout),
+            static_cast<clblast::Side>(side),
+            static_cast<clblast::Triangle>(triangle),
+            m, n,
+            std::complex<float>(alpha->s[0],alpha->s[1]),
+            a_buffer, a_offset, a_ld,
+            b_buffer, b_offset, b_ld,
+            std::complex<float>(beta->s[0],beta->s[1]),
+            c_buffer, c_offset, c_ld,
+            queue, event
+        );
+    } catch(std::exception &e) {
+        const char *msg = e.what();
+        fprintf(stderr,"CLBlast:%s\n",msg);
+        status = (clblast::StatusCode)-1;
+    } catch (...) {
+        fprintf(stderr,"CLBlast: unknown error\n");
+        status = (clblast::StatusCode)-1;
+    }
+    return (CLBlastStatusCode)status;
+}
+
+CLBlastStatusCode RindowCLBlastZhemm(const CLBlastLayout layout, const CLBlastSide side, const CLBlastTriangle triangle,
+                                          const size_t m, const size_t n,
+                                          const rindow_double2 *alpha,
+                                          const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
+                                          const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
+                                          const rindow_double2 *beta,
+                                          cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
+                                          cl_command_queue* queue, cl_event* event)
+{
+    clblast::StatusCode status;
+    try {
+        status = clblast::Hemm(
+            static_cast<clblast::Layout>(layout),
+            static_cast<clblast::Side>(side),
+            static_cast<clblast::Triangle>(triangle),
+            m, n,
+            std::complex<double>(alpha->s[0],alpha->s[1]),
+            a_buffer, a_offset, a_ld,
+            b_buffer, b_offset, b_ld,
+            std::complex<double>(beta->s[0],beta->s[1]),
+            c_buffer, c_offset, c_ld,
+            queue, event
+        );
+    } catch(std::exception &e) {
+        const char *msg = e.what();
+        fprintf(stderr,"CLBlast:%s\n",msg);
+        status = (clblast::StatusCode)-1;
+    } catch (...) {
+        fprintf(stderr,"CLBlast: unknown error\n");
+        status = (clblast::StatusCode)-1;
+    }
+    return (CLBlastStatusCode)status;
+}
+
 CLBlastStatusCode RindowCLBlastCsyrk(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose a_transpose,
                                           const size_t n, const size_t k,
                                           const rindow_float2 *alpha,
@@ -985,6 +1053,72 @@ CLBlastStatusCode RindowCLBlastZsyr2k(const CLBlastLayout layout, const CLBlastT
             a_buffer, a_offset, a_ld,
             b_buffer, b_offset, b_ld,
             std::complex<double>(beta->s[0],beta->s[1]),
+            c_buffer, c_offset, c_ld,
+            queue, event
+        );
+    } catch(std::exception &e) {
+        const char *msg = e.what();
+        fprintf(stderr,"CLBlast:%s\n",msg);
+        status = (clblast::StatusCode)-1;
+    } catch (...) {
+        fprintf(stderr,"CLBlast: unknown error\n");
+        status = (clblast::StatusCode)-1;
+    }
+    return (CLBlastStatusCode)status;
+}
+CLBlastStatusCode RindowCLBlastCHer2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
+                                           const size_t n, const size_t k,
+                                           const rindow_float2 *alpha,
+                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
+                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
+                                           const float beta,
+                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
+                                           cl_command_queue* queue, cl_event* event)
+{
+    clblast::StatusCode status;
+    try {
+        status = clblast::Her2k(
+            static_cast<clblast::Layout>(layout),
+            static_cast<clblast::Triangle>(triangle),
+            static_cast<clblast::Transpose>(ab_transpose),
+            n, k,
+            std::complex<float>(alpha->s[0],alpha->s[1]),
+            a_buffer, a_offset, a_ld,
+            b_buffer, b_offset, b_ld,
+            beta,
+            c_buffer, c_offset, c_ld,
+            queue, event
+        );
+    } catch(std::exception &e) {
+        const char *msg = e.what();
+        fprintf(stderr,"CLBlast:%s\n",msg);
+        status = (clblast::StatusCode)-1;
+    } catch (...) {
+        fprintf(stderr,"CLBlast: unknown error\n");
+        status = (clblast::StatusCode)-1;
+    }
+    return (CLBlastStatusCode)status;
+}
+CLBlastStatusCode RindowCLBlastZher2k(const CLBlastLayout layout, const CLBlastTriangle triangle, const CLBlastTranspose ab_transpose,
+                                           const size_t n, const size_t k,
+                                           const rindow_double2 *alpha,
+                                           const cl_mem a_buffer, const size_t a_offset, const size_t a_ld,
+                                           const cl_mem b_buffer, const size_t b_offset, const size_t b_ld,
+                                           const double beta,
+                                           cl_mem c_buffer, const size_t c_offset, const size_t c_ld,
+                                           cl_command_queue* queue, cl_event* event)
+{
+    clblast::StatusCode status;
+    try {
+        status = clblast::Her2k(
+            static_cast<clblast::Layout>(layout),
+            static_cast<clblast::Triangle>(triangle),
+            static_cast<clblast::Transpose>(ab_transpose),
+            n, k,
+            std::complex<double>(alpha->s[0],alpha->s[1]),
+            a_buffer, a_offset, a_ld,
+            b_buffer, b_offset, b_ld,
+            beta,
             c_buffer, c_offset, c_ld,
             queue, event
         );

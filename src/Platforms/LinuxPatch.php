@@ -575,73 +575,6 @@ class LinuxPatch
     }
 
     /**
-    public function CLBlastCtrsv(
-        int $layout,        // const CLBlastLayout layout,
-        int $triangle,      // const CLBlastTriangle triangle,
-        int $a_transpose,   // const CLBlastTranspose a_transpose,
-        int $diagonal,      // const CLBlastDiagonal diagonal,
-        int $n,             // const size_t n,
-        object $a_buffer,   // const cl_mem a_buffer,
-        int $a_offset,      // const size_t a_offset,
-        int $a_ld,          // const size_t a_ld,
-        object $x_buffer,   // cl_mem x_buffer,
-        int $x_offset,      // const size_t x_offset,
-        int $x_inc,         // const size_t x_inc,
-        object $queue,      // cl_command_queue* queue,
-        ?object $event      // cl_event* event
-        ) : int             // CLBlastStatusCode
-    {
-        return $this->ffi->RindowCLBlastCtrsv(
-            $layout,        // const CLBlastLayout layout,
-            $triangle,      // const CLBlastTriangle triangle,
-            $a_transpose,   // const CLBlastTranspose a_transpose,
-            $diagonal,      // const CLBlastDiagonal diagonal,
-            $n,             // const size_t n,
-            $a_buffer,      // const cl_mem a_buffer,
-            $a_offset,      // const size_t a_offset,
-            $a_ld,          // const size_t a_ld,
-            $x_buffer,      // cl_mem x_buffer,
-            $x_offset,      // const size_t x_offset,
-            $x_inc,         // const size_t x_inc,
-            $queue,         // cl_command_queue* queue,
-            $event          // cl_event* event
-        );
-    }
-
-    public function CLBlastZtrsv(
-        int $layout,        // const CLBlastLayout layout,
-        int $triangle,      // const CLBlastTriangle triangle,
-        int $a_transpose,   // const CLBlastTranspose a_transpose,
-        int $diagonal,      // const CLBlastDiagonal diagonal,
-        int $n,             // const size_t n,
-        object $a_buffer,   // const cl_mem a_buffer,
-        int $a_offset,      // const size_t a_offset,
-        int $a_ld,          // const size_t a_ld,
-        object $x_buffer,   // cl_mem x_buffer,
-        int $x_offset,      // const size_t x_offset,
-        int $x_inc,         // const size_t x_inc,
-        object $queue,      // cl_command_queue* queue,
-        ?object $event      // cl_event* event
-        ) : int             // CLBlastStatusCode
-    {
-        return $this->ffi->RindowCLBlastZtrsv(
-            $layout,        // const CLBlastLayout layout,
-            $triangle,      // const CLBlastTriangle triangle,
-            $a_transpose,   // const CLBlastTranspose a_transpose,
-            $diagonal,      // const CLBlastDiagonal diagonal,
-            $n,             // const size_t n,
-            $a_buffer,      // const cl_mem a_buffer,
-            $a_offset,      // const size_t a_offset,
-            $a_ld,          // const size_t a_ld,
-            $x_buffer,      // cl_mem x_buffer,
-            $x_offset,      // const size_t x_offset,
-            $x_inc,         // const size_t x_inc,
-            $queue,         // cl_command_queue* queue,
-            $event          // cl_event* event
-        );
-    }
-*/
-    /**
      * 
      */
     public function CLBlastCgeru(
@@ -1160,6 +1093,102 @@ class LinuxPatch
     /**
      * 
      */
+    public function CLBlastChemm(
+        int $layout,    // const CLBlastLayout layout,
+        int $side,      // const CLBlastSide side,
+        int $triangle,  // const CLBlastTriangle triangle,
+        int $m,         // const size_t m,
+        int $n,         // const size_t n,
+        object $alpha,  // const void *alpha,
+        object $a_buffer,// const cl_mem a_buffer,
+        int $a_offset,  // const size_t a_offset,
+        int $a_ld,      // const size_t a_ld,
+        object $b_buffer,// const cl_mem b_buffer,
+        int $b_offset,  // const size_t b_offset,
+        int $b_ld,      // const size_t b_ld,
+        object $beta,   // const void *beta,
+        object $c_buffer,// cl_mem c_buffer,
+        int $c_offset,  // const size_t c_offset,
+        int $c_ld,      // const size_t c_ld,
+        object $queue,  // cl_command_queue* queue,
+        ?object $event   // cl_event* event
+        ) : int         // CLBlastStatusCode 
+    {
+        $alpha = FFI::addr($alpha);
+        $beta  = FFI::addr($beta);
+        return $this->ffi->RindowCLBlastChemm(
+            $layout,    // const CLBlastLayout layout,
+            $side,      // const CLBlastSide side,
+            $triangle,  // const CLBlastTriangle triangle,
+            $m,         // const size_t m,
+            $n,         // const size_t n,
+            $alpha,     // const void *alpha,
+            $a_buffer,  // const cl_mem a_buffer,
+            $a_offset,  // const size_t a_offset,
+            $a_ld,      // const size_t a_ld,
+            $b_buffer,  // const cl_mem b_buffer,
+            $b_offset,  // const size_t b_offset,
+            $b_ld,      // const size_t b_ld,
+            $beta,      // const void *beta,
+            $c_buffer,  // cl_mem c_buffer,
+            $c_offset,  // const size_t c_offset,
+            $c_ld,      // const size_t c_ld,
+            $queue,     // cl_command_queue* queue,
+            $event      // cl_event* event
+            );
+    }
+
+    /**
+     * 
+     */
+    public function CLBlastZhemm(
+        int $layout,    // const CLBlastLayout layout,
+        int $side,      // const CLBlastSide side,
+        int $triangle,  // const CLBlastTriangle triangle,
+        int $m,         // const size_t m,
+        int $n,         // const size_t n,
+        object $alpha,  // const void *alpha,
+        object $a_buffer,// const cl_mem a_buffer,
+        int $a_offset,  // const size_t a_offset,
+        int $a_ld,      // const size_t a_ld,
+        object $b_buffer,// const cl_mem b_buffer,
+        int $b_offset,  // const size_t b_offset,
+        int $b_ld,      // const size_t b_ld,
+        object $beta,   // const void *beta,
+        object $c_buffer,// cl_mem c_buffer,
+        int $c_offset,  // const size_t c_offset,
+        int $c_ld,      // const size_t c_ld,
+        object $queue,  // cl_command_queue* queue,
+        ?object $event   // cl_event* event
+        ) : int         // CLBlastStatusCode 
+    {
+        $alpha = FFI::addr($alpha);
+        $beta  = FFI::addr($beta);
+        return $this->ffi->RindowCLBlastZhemm(
+            $layout,    // const CLBlastLayout layout,
+            $side,      // const CLBlastSide side,
+            $triangle,  // const CLBlastTriangle triangle,
+            $m,         // const size_t m,
+            $n,         // const size_t n,
+            $alpha,     // const void *alpha,
+            $a_buffer,  // const cl_mem a_buffer,
+            $a_offset,  // const size_t a_offset,
+            $a_ld,      // const size_t a_ld,
+            $b_buffer,  // const cl_mem b_buffer,
+            $b_offset,  // const size_t b_offset,
+            $b_ld,      // const size_t b_ld,
+            $beta,      // const void *beta,
+            $c_buffer,  // cl_mem c_buffer,
+            $c_offset,  // const size_t c_offset,
+            $c_ld,      // const size_t c_ld,
+            $queue,     // cl_command_queue* queue,
+            $event      // cl_event* event
+            );
+    }
+
+    /**
+     * 
+     */
     public function CLBlastCsyrk(
         int $layout,    // const CLBlastLayout layout,
         int $triangle,  // const CLBlastTriangle triangle,
@@ -1328,6 +1357,102 @@ class LinuxPatch
             $b_offset,  // const size_t b_offset,
             $b_ld,      // const size_t b_ld,
             $beta,      // const void *beta,
+            $c_buffer,  // cl_mem c_buffer,
+            $c_offset,  // const size_t c_offset,
+            $c_ld,      // const size_t c_ld,
+            $queue,     // cl_command_queue* queue,
+            $event      // cl_event* event
+        );
+    }
+
+    /**
+     * 
+     */
+    public function CLBlastCher2k(
+        int $layout,    // const CLBlastLayout layout,
+        int $triangle,  // const CLBlastTriangle triangle,
+        int $ab_transpose,// const CLBlastTranspose ab_transpose,
+        int $n,         // const size_t n,
+        int $k,         // const size_t k,
+        object $alpha,  // const void *alpha,
+        object $a_buffer,// const cl_mem a_buffer,
+        int $a_offset,  // const size_t a_offset,
+        int $a_ld,      // const size_t a_ld,
+        object $b_buffer,// const cl_mem b_buffer,
+        int $b_offset,  // const size_t b_offset,
+        int $b_ld,      // const size_t b_ld,
+        float $beta,    // const float beta,
+        object $c_buffer,// cl_mem c_buffer,
+        int $c_offset,  // const size_t c_offset,
+        int $c_ld,      // const size_t c_ld,
+        object $queue,  // cl_command_queue* queue,
+        ?object $event   // cl_event* event
+        ) : int         // CLBlastStatusCode 
+    {
+        $alpha = FFI::addr($alpha);
+        $beta  = FFI::addr($beta);
+        return $this->ffi->RindowCLBlastCher2k(
+            $layout,    // const CLBlastLayout layout,
+            $triangle,  // const CLBlastTriangle triangle,
+            $ab_transpose,// const CLBlastTranspose ab_transpose,
+            $n,         // const size_t n,
+            $k,         // const size_t k,
+            $alpha,     // const void *alpha,
+            $a_buffer,  // const cl_mem a_buffer,
+            $a_offset,  // const size_t a_offset,
+            $a_ld,      // const size_t a_ld,
+            $b_buffer,  // const cl_mem b_buffer,
+            $b_offset,  // const size_t b_offset,
+            $b_ld,      // const size_t b_ld,
+            $beta,      // const float beta,
+            $c_buffer,  // cl_mem c_buffer,
+            $c_offset,  // const size_t c_offset,
+            $c_ld,      // const size_t c_ld,
+            $queue,     // cl_command_queue* queue,
+            $event      // cl_event* event
+        );
+    }
+
+    /**
+     * 
+     */
+    public function CLBlastZher2k(
+        int $layout,    // const CLBlastLayout layout,
+        int $triangle,  // const CLBlastTriangle triangle,
+        int $ab_transpose,// const CLBlastTranspose ab_transpose,
+        int $n,         // const size_t n,
+        int $k,         // const size_t k,
+        object $alpha,  // const void *alpha,
+        object $a_buffer,// const cl_mem a_buffer,
+        int $a_offset,  // const size_t a_offset,
+        int $a_ld,      // const size_t a_ld,
+        object $b_buffer,// const cl_mem b_buffer,
+        int $b_offset,  // const size_t b_offset,
+        int $b_ld,      // const size_t b_ld,
+        float $beta,    // const double beta,
+        object $c_buffer,// cl_mem c_buffer,
+        int $c_offset,  // const size_t c_offset,
+        int $c_ld,      // const size_t c_ld,
+        object $queue,  // cl_command_queue* queue,
+        ?object $event   // cl_event* event
+        ) : int         // CLBlastStatusCode 
+    {
+        $alpha = FFI::addr($alpha);
+        $beta  = FFI::addr($beta);
+        return $this->ffi->RindowCLBlastZher2k(
+            $layout,    // const CLBlastLayout layout,
+            $triangle,  // const CLBlastTriangle triangle,
+            $ab_transpose,// const CLBlastTranspose ab_transpose,
+            $n,         // const size_t n,
+            $k,         // const size_t k,
+            $alpha,     // const void *alpha,
+            $a_buffer,  // const cl_mem a_buffer,
+            $a_offset,  // const size_t a_offset,
+            $a_ld,      // const size_t a_ld,
+            $b_buffer,  // const cl_mem b_buffer,
+            $b_offset,  // const size_t b_offset,
+            $b_ld,      // const size_t b_ld,
+            $beta,      // const double beta,
             $c_buffer,  // cl_mem c_buffer,
             $c_offset,  // const size_t c_offset,
             $c_ld,      // const size_t c_ld,
